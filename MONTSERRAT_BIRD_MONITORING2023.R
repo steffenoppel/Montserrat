@@ -37,7 +37,8 @@ library(rjags)
 ######################################################################################
 
 #setwd("C:\\STEFFEN\\RSPB\\Montserrat\\Analysis\\Population_status_assessment\\AnnualMonitoring")
-setwd("C:\\STEFFEN\\OneDrive - THE ROYAL SOCIETY FOR THE PROTECTION OF BIRDS\\STEFFEN\\RSPB\\UKOT\\Montserrat\\Analysis\\Population_status_assessment\\AnnualMonitoring")
+#setwd("C:\\STEFFEN\\OneDrive - THE ROYAL SOCIETY FOR THE PROTECTION OF BIRDS\\STEFFEN\\RSPB\\UKOT\\Montserrat\\Analysis\\Population_status_assessment\\AnnualMonitoring")
+setwd("C:\\Users\\sop\\Documents\\Steffen\\RSPB\\Montserrat")
 
 
 
@@ -276,7 +277,9 @@ nc <- 4
 ####   RUN THE MODEL IN PARALLEL JAGS                   ################################
 ###############################################################################
 
-model <- jagsUI(bugs.data, inits, params, "C:\\STEFFEN\\OneDrive - THE ROYAL SOCIETY FOR THE PROTECTION OF BIRDS\\STEFFEN\\RSPB\\UKOT\\Montserrat\\Analysis\\Population_status_assessment\\AnnualMonitoring\\TRENDMODEL_ACT_RandomYear.txt", n.chains = nc, n.thin = nt, n.iter = ni, n.burnin = nb, parallel=T, n.cores=4)
+model <- jagsUI(bugs.data, inits, params,
+		"C:\\Users\\sop\\Documents\\Steffen\\RSPB\\Montserrat\\TRENDMODEL_ACT_RandomYear.txt",
+		n.chains = nc, n.thin = nt, n.iter = ni, n.burnin = nb, parallel=T, n.cores=4)
 
 
 
