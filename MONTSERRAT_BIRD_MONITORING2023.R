@@ -278,7 +278,7 @@ nc <- 4
 ###############################################################################
 
 model <- jagsUI(bugs.data, inits, params,
-		"C:\\Users\\sop\\Documents\\Steffen\\RSPB\\Montserrat\\TRENDMODEL_ACT_RandomYear.txt",
+		"C:\\Users\\sop\\Documents\\Steffen\\RSPB\\Montserrat\\TRENDMODEL_ACT_RandomYear.jags",
 		n.chains = nc, n.thin = nt, n.iter = ni, n.burnin = nb, parallel=T, n.cores=4)
 
 
