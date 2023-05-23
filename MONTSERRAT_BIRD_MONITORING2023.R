@@ -27,7 +27,7 @@ library(Hmisc)
 library(reshape)
 library(R2jags)
 library(jagsUI)
-install.packages("rjags")
+#install.packages("rjags")
 library(rjags)
 
 
