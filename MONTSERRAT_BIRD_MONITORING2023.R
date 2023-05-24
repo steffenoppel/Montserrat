@@ -23,7 +23,7 @@
 #############  Load required packages       ##########################################
 ######################################################################################
 
-library(Hmisc)
+library(tidyverse)
 library(reshape)
 library(R2jags)
 library(jagsUI)
@@ -328,23 +328,29 @@ annestimates[annestimates$species==s,8]<-round(model$summary[(nyears+4):(dim(mod
 ####   CREATE TREND PLOT AND SAVE AS PDF          #############################
 ###############################################################################
 
+trendlabel<- paste("Trend: ",trendout[trendout$species==s,3]," (",trendout[trendout$species==s,4]," - ",trendout[trendout$species==s,5],")", sep="")
+ggplot(annestimates[annestimates$species==s,], aes(x=Year,y=trend)) +
+  geom_line(colour="indianred", linewidth=1.5) +
+  geom_ribbon(aes(ymin = lower95CI, ymax = upper95CI), fill="indianred", alpha = 0.2) +
 
-pdf(sprintf("MONTSERRAT_%s_abund_plot2023.pdf",s), width=10, height=10, title="")
-x<-c(2011:YEAR)
-par(cex = 1.2, mar=c(3,6,0,0))
-lower <- upper <- numeric()
-for (i in 1:length(x)){
-   lower[i] <- quantile(model$sims.list$totalN[,i], 0.025)
-   upper[i] <- quantile(model$sims.list$totalN[,i], 0.975)
-   }
-ylow<-round((min(lower)-50)/1000,1)*1000
-yup<-round((max(upper)+50)/1000,1)*1000
+  ## format axis ticks
+  scale_x_continuous(name="Year", breaks=seq(2011,2023,2), labels=as.character(seq(2011,2023,2)))+
+  #scale_y_continuous(name="Number of Birds at 67 Sampling Points", breaks=seq(0,4000,500), labels=as.character(seq(0,4000,500)))+
+  ylab(sprintf("Number of %s at %i sampling points",s,nsites)) +
+  
+  annotate("text", x = -Inf, y = Inf, label = trendlabel, vjust = 2, hjust = -0.1,size=6, color="black") +
+  
+  ## beautification of the axes
+  theme(panel.background=element_rect(fill="white", colour="black"), panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        axis.text=element_text(size=18, color="black"), 
+        axis.title=element_text(size=18), 
+        strip.text.x=element_text(size=18, color="black"),
+        axis.title.y=element_text(margin=margin(0,20,0,0)), 
+        strip.background=element_rect(fill="white", colour="black"))
 
-errbar(x=seq(1,length(x)),y=model$summary[2:(nyears+1),5],model$summary[2:(nyears+1),3],model$summary[2:(nyears+1),7], type = "p", ylim = c(ylow,yup), xlim=c(0,(length(x)+1)),ylab = "N birds at survey points", xlab = "", cex=2, las = 1, pch = 16, frame = F, axes=F, cex.lab=1.5, mgp=c(3.8,0.5,0), main=s)
-axis(1, at=seq(0,(length(x)+1),1),labels=c("",2011:YEAR,""), cex.axis=1.5)
-axis(2, at=seq(ylow,yup,ifelse(yup-ylow>1000,400,100)),labels=seq(ylow,yup,ifelse(yup-ylow>1000,400,100)), cex.axis=1.5, las=1, mgp=c(3,0.5,0))
+ggsave(sprintf("MONTSERRAT_%s_abund_plot2023.pdf",s), width=12, height=9)
 
-dev.off()
+
 
 
 ##### END THE LOOP ACROSS SPECIES ####
