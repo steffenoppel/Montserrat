@@ -1,0 +1,83 @@
+---
+title: "Montserrat Forest Bird Monitoring - Annual Summary"
+author: "Department of Environment / RSPB"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,warning=FALSE,error=FALSE,message=FALSE)
+```
+
+The forests on Montserrat are home for two globally threatened forest bird species, the endemic Montserrat Oriole and the Forest Thrush. Since 1999 the Department of Environment and the RSPB have counted the forest birds in the Center Hills along 11 survey routes at least once per year at the beginning of the birds' breeding season in April.
+<br>
+<br>
+
+### Forest bird monitoring in April and May 2023
+
+In 2023, we conducted point counts of all forest species between `r format(min(surveys2023$Date),format="%d %b")` and  `r format(max(surveys2023$Date),format="%d %b")` and completed a total of `r length(surveys2023$Time)` independent counts at `r length(unique(surveys2023$Point))` points in the forest, with three independent counts at each point. 
+<br>
+<br>
+
+
+### Summary of raw observations in April and May 2023
+
+During each of the three survey rounds, we counted between `r min(totals2023$N)` and `r max(totals2023$N)` birds of `r min(totals2023$n_spec, na.rm=T)` to `r max(totals2023$n_spec, na.rm=T)` species across all `r length(unique(surveys2023$Point))` points. The observed number per species in each of the three survey rounds is shown in Table 1.
+
+
+```{r  table1, echo=FALSE,warning=FALSE,error=FALSE,message=FALSE}
+kable(table1, caption="Observed number of forest birds in the Centre Hills of Montserrat in April and May 2023 during three independent survey rounds.",col.names=  c("Species","Total N in round 1", "Total N in round 2", "Total N in round 3"))
+```
+
+
+<br>
+<br>
+
+
+### Estimate of forest bird trends on Montserrat since 2011
+
+Since the survey design with three repeated counts at each point was introduced in 2011, we can estimate the long-term trends based on a repeatable method. The three repeated visits allow us to estimate what proportion of birds were not seen during the surveys, so that the estimated number is less affected by temporal changes in weather or bird calling activity.
+
+There is no indication that the two globally threatened species (Montserrat Oriole and Forest Thrush) have decreased since 2011, in fact, they may have slightly increased. However, Green-throated Caribs appear to have been affected by the hurricanes in 2017, and Caribbean Elaenias seem to be slowly declining since 2011.
+
+
+
+```{r, echo=FALSE,warning=FALSE,error=FALSE,message=FALSE, fig.height = 10, fig.width = 9, fig.align = "center"}
+summary<-COUNTDATA %>% group_by(Species,Year) %>%
+  summarise(mean=mean(N, na.rm=T), sd=sd(N, na.rm=T)) %>%
+  filter(Year!=2020) %>% ### no counts were done in 2020
+  mutate(Species=fullnames[match(Species,SPECIES)])
+
+gg<-ggplot()+
+geom_line(data=summary, aes(x=Year, y=mean), linewidth=1)+
+  facet_wrap(~Species, ncol=2, scales="free_y")+
+geom_point(data=summary, aes(x=Year, y=mean), size=1.5,col='black')+
+#geom_ribbon(data=annestimates,aes(x=Year, ymin=lower95CI,ymax=upper95CI),alpha=0.2)+
+geom_errorbar(data=summary,aes(x=Year, ymin=(mean-0.5*sd),ymax=(mean+0.5*sd)), colour="black", width=.1) +
+
+## remove the legend
+theme(legend.position="none")+
+guides(fill=FALSE)+
+theme(legend.title = element_blank())+
+theme(legend.text = element_blank())+
+
+## format axis ticks
+scale_x_continuous(name="Year", breaks=seq(2011,2023,2), labels=as.character(seq(2011,2023,2)))+
+#scale_y_continuous(name="Number of Birds at 67 Sampling Points", breaks=seq(0,4000,500), labels=as.character(seq(0,4000,500)))+
+ylab("Number of Birds per Sampling Point") +
+
+## beautification of the axes
+  theme(panel.background=element_rect(fill="white", colour="black"), panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        axis.text=element_text(size=12, color="black"), 
+        axis.title=element_text(size=14), 
+        strip.text.x=element_text(size=12, color="black"),
+	  axis.title.y=element_text(margin=margin(0,20,0,0)), 
+        strip.background=element_rect(fill="white", colour="black")) 
+
+gg
+```
+*Figure 1: Estimated abundance of 10 forest bird species around 67 point count locations in the Center Hills of Montserrat since 2011*
+
+
+<br>
+<br>
+
