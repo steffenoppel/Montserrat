@@ -112,8 +112,9 @@ head(siteCov)
 obsCov$rain<- 1
 obsCov$rain[is.na(obsCov$Rain)] <- 0
 
-obsCov$wind<-as.ordered(match(obsCov$Wind,levels(obsCov$Wind)))
-obsCov$wind<-ifelse(obsCov$wind<3,0,1)					### convert wind into two-level factor yes and no
+obsCov$wind<-recode(.x = obsCov$Wind, 'calm' = 1, 'light' = 2, 'moderate' = 3, 'strong' = 4) # convert categories 'calm', light', 'moderate' and 'strong' to numbers
+obsCov$wind<-factor(obsCov$wind, levels = c(1, 2, 3, 4), ordered = TRUE) # store as ordered factor with 4 levels, 1=calm, 4=strong
+# obsCov$wind<-ifelse(obsCov$wind<3,0,1)					### convert wind into two-level factor yes and no // I rather used 4 levels (Filibert)
 obsCov$Wind<-NULL
 names(obsCov)[c(7,8)]<- c("obs", "skill")
 head(obsCov)
