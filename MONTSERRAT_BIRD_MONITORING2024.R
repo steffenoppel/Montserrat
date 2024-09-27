@@ -371,8 +371,8 @@ ggsave(sprintf("MONTSERRAT_%s_abund_plot2023.pdf",s), width=12, height=9)
 
 
 
-write.table(annestimates,"Annual_estimates2023.csv", row.names=F, sep=",")
-write.table(trendout,"Trend_estimates2023.csv", row.names=F, sep=",")
+write.table(annestimates,"output/Annual_estimates2024.csv", row.names=F, sep=",")
+write.table(trendout,"output/Trend_estimates2024.csv", row.names=F, sep=",")
 
 
 
