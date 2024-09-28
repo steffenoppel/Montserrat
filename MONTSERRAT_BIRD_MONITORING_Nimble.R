@@ -40,7 +40,7 @@ setwd("C:\\STEFFEN\\OneDrive - THE ROYAL SOCIETY FOR THE PROTECTION OF BIRDS\\ST
 #############  load the pre-prepared dataset					     #########
 ######################################################################################
 
-load("MONTSERRAT_ANNUAL_DATA_INPUT2024.RData")
+load("data/MONTSERRAT_ANNUAL_DATA_INPUT2024.RData")
 #load("S:\\ConSci\\DptShare\\SteffenOppel\\RSPB\\Montserrat\\Analysis\\Population_status_assessment\\AnnualMonitoring\\MONTSERRAT_ANNUAL_DATA_INPUT2023.RData")
 fullnames<-c("Montserrat Oriole", "Forest Thrush", "Bridled Quail-Dove", "Brown Trembler",
              "Antillean Crested Hummingbird","Purple-throated Carib",
@@ -358,11 +358,6 @@ bird_s<-bird_s[order(bird_s$Point,bird_s$Year, bird_s$Count, decreasing=F),]
 bird_s$N[is.na(SURVEYDATA$time)]<-NA
 
 
-#### TROUBLESHOOT MISMATCH ERROR ###
-# errorfind<- SURVEYDATA %>% left_join(bird_s, by=c('Year','Point','Count')) %>%
-#   dplyr::filter(is.na(Species))
-
-
 ###############################################################################
 ############## CREATE BIRD DATA INPUT MATRIX   ################################
 ###############################################################################
@@ -387,18 +382,6 @@ Nst[,y]<-apply(dis[,2:4], MARGIN=1, FUN=max, na.rm=T)+1
 ######################################################################################################
 ########## CREATE INPUT DATA FOR JAGS
 #######################################################################################################
-
-# check data dimensions
-#dim(BIRD.y)
-#dim(treeheight)
-#dim(elev)
-#dim(canopy)
-#dim(day)
-#dim(wind)
-#dim(ridge)
-#dim(time)
-
-
 
 ### Bundle data into a single list passed on to JAGS
 
