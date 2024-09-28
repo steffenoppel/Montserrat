@@ -252,7 +252,7 @@ trend.model<-nimbleCode({
 ## NIMBLE CAN HAVE CONVERGENCE PROBLEMS IF DIFFERENT INITS ARE SPECIFIED: https://groups.google.com/g/nimble-users/c/dgx9ajOniG8
 
 # Missing values (NAs) or non-finite values were found in model variables: fledglings
-inits.productivity <- list(intercept.succ = rnorm(1,0, 0.01),
+inits.trend <- list(intercept.succ = rnorm(1,0, 0.01),
                            #rain.succ = rnorm(1,0, 1),
                            #elevation.succ = rnorm(1,0, 1),
                            mig.succ = rnorm(1,0, 1),
@@ -316,13 +316,7 @@ test <- nimbleModel(code = prod.model,
 
 ### make sure that none of the logProbs result in NA or -Inf as the model will not converge
 test$calculate()
-# test$calculate(nodes=c("intercept.nest","age.nest","mig.nest","agemig.nest","feed.nest",
-#                        "intercept.succ","elevation.succ","rain.succ","mig.succ","agemig.succ",
-#                        "intercept.fec1","intercept.fec1","intercept.fec3","rain.fec","feed.fec","rodent.fec","age.fec"))  # will sum all log probs - if there is -Inf or NA then something is not properly initialised
-# test$calculate(nodes=c("prob","fl0","fl1","fl2","fl3","psi","z"))  # check the model parameters that are internally estimated
-# test$calculate(nodes=c("tau.year","sigma.year","succ.year"))  # check the random effects parameters
-# test$calculate(nodes="fledglings") # this causes a NaN when the nest probability (z[i] = 0)
-# test$logProb_fledglings
+
 
 test$initializeInfo()
 #help(modelInitialization)

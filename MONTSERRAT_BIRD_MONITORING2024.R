@@ -321,7 +321,7 @@ slope<-mean(model$mean$fit) / mean(model$mean$fit.new)
 # Summarize posteriors
 #print(model, dig = 3)
 
-write.table(model$summary,sprintf("%s_abund_estimates2023_p%f.csv",s,pval), sep=",")
+write.table(model$summary,sprintf("%s_abund_estimates2024_p%f.csv",s,pval), sep=",")
 
 
 trendout[trendout$species==s,3]<-round(model$summary[1,5],3)
@@ -361,7 +361,7 @@ ggplot(annestimates[annestimates$species==s,], aes(x=Year,y=trend)) +
         axis.title.y=element_text(margin=margin(0,20,0,0)), 
         strip.background=element_rect(fill="white", colour="black"))
 
-ggsave(sprintf("MONTSERRAT_%s_abund_plot2023.pdf",s), width=12, height=9)
+ggsave(sprintf("output/MONTSERRAT_%s_abund_plot2024.pdf",s), width=12, height=9)
 
 
 
@@ -399,6 +399,7 @@ trendout<-trendout %>%
   mutate(col=ifelse(species=="CAEL","darkred",col))
 annestimates %>% filter(Year!=2020) %>%
   mutate(col = as.factor(trendout$col[match(species,trendout$species)])) %>%
+  mutate(upper95CI=ifelse(upper95CI>3000,min(3000,dplyr::lag(upper95CI)),upper95CI)) %>%
   
 
 ggplot()+
@@ -426,7 +427,7 @@ scale_x_continuous(name="Year", breaks=seq(2011,2023,2), labels=as.character(seq
 	  axis.title.y=element_text(margin=margin(0,20,0,0)), 
         strip.background=element_rect(fill="white", colour="black")) 
 
-ggsave("Montserrat_ForestBird_Trends_2024.pdf", width=13, height=16)
+ggsave("output/Montserrat_ForestBird_Trends_2024.pdf", width=13, height=16)
 
 
 
@@ -438,8 +439,8 @@ ggsave("Montserrat_ForestBird_Trends_2024.pdf", width=13, height=16)
 ######################################################################################
 
 
-surveys2023<-obsCov %>% filter(year==2023)
-birds2023<-birds %>% filter(Year==2023) %>% rename(N=SumOfNumber1) %>% mutate(Point=as.integer(as.character(Point))) %>% filter(!Species %in% c('UNK','NA'))
+surveys2023<-obsCov %>% filter(year==2024)
+birds2023<-birds %>% filter(Year==2024) %>% rename(N=SumOfNumber1) %>% mutate(Point=as.integer(as.character(Point))) %>% filter(!Species %in% c('UNK','NA'))
 summary2023<-surveys2023 %>% select(Year, Point, Count, Date) %>%
   left_join(birds2023, by=c('Year','Point','Count')) %>%
   group_by(Count, Species) %>%
@@ -516,9 +517,9 @@ table2<-trendout %>%
 Sys.setenv(RSTUDIO_PANDOC="C:/Users/Inge Oppel/AppData/Local/Pandoc")
 # Sys.setenv(RSTUDIO_PANDOC="C:/Program Files/RStudio/bin/pandoc")
 #
-rmarkdown::render('C:\\STEFFEN\\OneDrive - THE ROYAL SOCIETY FOR THE PROTECTION OF BIRDS\\STEFFEN\\RSPB\\UKOT\\Montserrat\\Analysis\\Population_status_assessment\\AnnualMonitoring\\Annual_abundance_report.Rmd',
+rmarkdown::render('C:\\STEFFEN\\OneDrive - THE ROYAL SOCIETY FOR THE PROTECTION OF BIRDS\\STEFFEN\\RSPB\\UKOT\\Montserrat\\Analysis\\Population_status_assessment\\AnnualMonitoring\\Montserrat\\Annual_abundance_report.Rmd',
                   output_file = "Montserrat_ForestBird_AnnualSummary2024.html",
-                  output_dir = 'C:\\STEFFEN\\OneDrive - THE ROYAL SOCIETY FOR THE PROTECTION OF BIRDS\\STEFFEN\\RSPB\\UKOT\\Montserrat\\Analysis\\Population_status_assessment\\AnnualMonitoring')
+                  output_dir = 'C:\\STEFFEN\\OneDrive - THE ROYAL SOCIETY FOR THE PROTECTION OF BIRDS\\STEFFEN\\RSPB\\UKOT\\Montserrat\\Analysis\\Population_status_assessment\\AnnualMonitoring\\Montserrat\\output')
 
 rmarkdown::render('C:\\Users\\sop\\Documents\\Steffen\\RSPB\\Montserrat\\Annual_abundance_report_modelled.Rmd',
                   output_file = "Montserrat_ForestBird_AnnualSummary2024.html",
