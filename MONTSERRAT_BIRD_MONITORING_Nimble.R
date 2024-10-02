@@ -47,34 +47,25 @@ fullnames<-c("Montserrat Oriole", "Forest Thrush", "Bridled Quail-Dove", "Brown 
              "Pearly-eyed Thrasher","Green-throated Carib","Scaly-breasted Thrasher","Scaly-naped Pigeon",
              "Caribbean Elaenia","Bananaquit")
 
+### summarise rainfall from Jan to March, productivity from PREVIOUS year will affect count in current year
+rain<-fread("data/MontserratRain2005_2023.csv",fill=TRUE) %>%
+  dplyr::filter(Variable=="RainMM") %>%
+  dplyr::filter(YEAR %in% seq(2010,2024,1)) %>%
+  dplyr::select(-Variable,-Total) %>%
+  gather(key="Month", value="mm",-YEAR) %>%
+  dplyr::filter(Month %in% c('JAN','FEB','MAR')) %>%
+  group_by(YEAR) %>%
+  summarise(rain=sum(mm)) %>%
+  mutate(rain=scale(rain)[,1])
+
 ###############################################################################
 ############## CREATE SITE COVARIATE DATA INPUT MATRIX   ######################
 ###############################################################################
 nsites<-length(unique(siteCov$Point))
 
-#### CAST THE SITE COV DATA FRAME INTO MATRIX WITH 1 COLUMN PER YEAR
-siteCovList<-array(NA, dim=c(nsites,nyears, 3))
-selectedCovs<-c(5,6,15)
-
-for (col in 1:length(selectedCovs)){
-  dis<-siteCov[,c(1,selectedCovs[col])]
-  
-  ### STANDARDIZE COVARIATES FOR WINBUGS
-  
-  meant<-mean(dis[,2], na.rm = TRUE)
-  sdt<-sd(dis[,2], na.rm = TRUE)
-  dis[,2]<-(dis[,2]-meant)/sdt
-  
-  dis<-dis[order(dis$Point,decreasing=F),]
-  siteCovList[,,col]<-as.matrix(rep(dis[,2],nyears), dimnames=NULL)
-}
-
-
-names(siteCov)[c(5,6,15)]
-treeheight<-siteCovList[,,1]
-elev<-siteCovList[,,2]
-canopy<-siteCovList[,,3]
-
+siteCov<-siteCov %>% arrange(Point) %>%
+  dplyr::select(Point,treeheight,Elevation,Canopy_cover,ridge) %>%
+  mutate(tree=scale(treeheight)[,1], elev=scale(Elevation)[,1],canopy=scale(Canopy_cover)[,1])
 
 
 
@@ -83,23 +74,13 @@ canopy<-siteCovList[,,3]
 ###############################################################################
 ############## CREATE OBSERVATION COVARIATE DATA INPUT MATRIX   ###############
 ###############################################################################
-SURVEYDATA<-SURVEYDATA[order(SURVEYDATA$Point,SURVEYDATA$Year, SURVEYDATA$Count, decreasing=F),] 
+SURVEYDATA<-SURVEYDATA %>%
+  arrange(Point,Year,Count) %>%
+  mutate(time=scale(time),Day=scale(Day))
 
 ## SORT THE TABLE SO IT HAS THE SAME ORDER AS THE BIRD DATA
-
-obsCov<-obsCov[order(obsCov$Point,obsCov$Year, obsCov$Count, decreasing=F),] 
-head(obsCov)
-
-
-### STANDARDIZE COVARIATES FOR WINBUGS
-
-meant<-mean(SURVEYDATA$time, na.rm = TRUE)
-sdt<-sd(SURVEYDATA$time, na.rm = TRUE)
-SURVEYDATA$time<-(SURVEYDATA$time-meant)/sdt
-
-meant<-mean(SURVEYDATA$Day, na.rm = TRUE)
-sdt<-sd(SURVEYDATA$Day, na.rm = TRUE)
-SURVEYDATA$Day<-(SURVEYDATA$Day-meant)/sdt
+obsCov<-obsCov %>%
+  arrange(Point,Year,Count)
 
 
 ### only needs standardisation if measured in mm, not as 0/1 variable
@@ -108,10 +89,8 @@ SURVEYDATA$Day<-(SURVEYDATA$Day-meant)/sdt
 #SURVEYDATA$rain<-(SURVEYDATA$rain-meant)/sdt
 
 
-
 ### create array for each covariate
 
-ridge<-array(NA, dim=c(nsites,3,nyears))
 wind<-array(NA, dim=c(nsites,3,nyears))
 time<-array(NA, dim=c(nsites,3,nyears))
 ACT<-array(NA, dim=c(nsites,3,nyears))				## REPLACED ON 2 MAY WITH RAINFALL AMOUNT
@@ -121,17 +100,15 @@ ACT<-array(NA, dim=c(nsites,3,nyears))				## REPLACED ON 2 MAY WITH RAINFALL AMO
 for (y in 2011:YEAR){
   obsC<-subset(SURVEYDATA, Year==y)
   y<-match(y,c(2011:YEAR))						## translates the year (2011, 2012, etc.) into consecutive number (1,2,...) for array dimensions
-  x<-cast(obsC, Point ~ Count, value='time')
-  x2<-as.matrix(x[,2:4])
-  time[,,y]<-x2
+  x<-obsC %>% dplyr::select(Point, Count, time) %>% tidyr::spread(key=Count, value=time) %>% dplyr::arrange(Point)
+  time[,,y]<-as.matrix(x[,2:4])
   
-  x<-cast(obsC, Point ~ Count, value='wind')
+  x<-obsC %>% dplyr::select(Point, Count, wind) %>% tidyr::spread(key=Count, value=wind) %>% dplyr::arrange(Point)
   wind[,,y]<-as.matrix(x[,2:4])
   
-  x<-cast(obsC, Point ~ Count, value='ACT')			## REPLACED ON 2 MAY WITH RAINFALL AMOUNT - changed to ACTIVITY ON 24 Dec 2017
+  x<-obsC %>% dplyr::select(Point, Count, ACT) %>% tidyr::spread(key=Count, value=ACT) %>% dplyr::arrange(Point)
   ACT[,,y]<-as.matrix(x[,2:4])
-  
-  ridge[,,y]<-matrix(rep(siteCov$ridge,3), ncol=3)		### site-level obs covariates are constant across years and counts
+
 }
 
 
@@ -141,8 +118,6 @@ for (y in 2011:YEAR){
 ###############################################################################
 ####   REPLACE ALL NA IN COVARIATES otherwise "undefined node" error    #######
 ###############################################################################
-
-siteCovList[is.na(siteCovList)]<-0
 
 for (d in 1:nyears){							### replace missing dates with mean for each survey round in each year
   ACT[is.na(ACT[,1,d]),1,d]<-mean(ACT[,1,d], na.rm=T)
@@ -182,7 +157,7 @@ trend.model<-nimbleCode({
   
   ## SITE RANDOM EFFECT ##
   for(i in 1:nsite){
-    lam.site[i]~dnorm(loglam,tau.site)    ## site-specific random effect with hierarchical centering from Kery email 5 June 2018
+    lam.site[i]~dnorm(loglam,tau=tau.site)    ## site-specific random effect with hierarchical centering from Kery email 5 June 2018
   }
   tau.site<-1/(sigma.site*sigma.site)
   sigma.site~dunif(0,10)
@@ -191,7 +166,7 @@ trend.model<-nimbleCode({
   for(year in 1:nyear){
     p0[year]~dunif(0,1)## detection probability
     logitp0[year]<-log(p0[year]/(1-p0[year]))
-    lam.year[year]~dnorm(trend*primocc[year],tau.year)    ## year-specific random effect with hierarchical centering from Kery email 5 June 2018
+    lam.year[year]~dnorm(trend*primocc[year],tau=tau.year)    ## year-specific random effect with hierarchical centering from Kery email 5 June 2018
   }
   tau.lp<-1/(sigma.p*sigma.p)
   sigma.p~dunif(0,10)
@@ -202,21 +177,21 @@ trend.model<-nimbleCode({
   ######### State and observation models ##############
   for(year in 1:nyear){
     for(i in 1:nsite){
-      log(lambda[i,year])<- lam.year[year]+beta.elev*elev[i,year]+beta.treeheight*treeheight[i,year]+beta.canopy*canopy[i,year]+lam.site[i]
+      log(lambda[i,year])<- lam.year[year]+beta.rain*rain[year]+beta.elev*elev[i]+beta.treeheight*treeheight[i]+beta.canopy*canopy[i]+lam.site[i]
       N[i,year]~dpois(lambda[i,year])
       
       for(t in 1:nrep){
         M[i,t,year]~dbin(p[i,t,year],N[i,year])
         p[i,t,year] <- exp(lp[i,t,year])/(1+exp(lp[i,t,year]))
-        lp[i,t,year] ~ dnorm(mu.lp[i,t,year], tau.lp)
-        mu.lp[i,t,year]<-logitp0[year] + btime*time[i,t,year]+ bridge*ridge[i,t,year]+ bwind*wind[i,t,year]+ bact*ACT[i,t,year]
+        lp[i,t,year] ~ dnorm(mu.lp[i,t,year], tau=tau.lp)
+        mu.lp[i,t,year]<-logitp0[year] + btime*time[i,t,year]+ bridge*ridge[i]+ bwind*wind[i,t,year]+ bact*ACT[i,t,year]
         
       }
     }
     
     ### DERIVED PARAMETER FOR EACH YEAR ###
-    totalN[year]<-sum(N[,year])
-    anndet[year]<-mean(p[,,year])
+    totalN[year]<-sum(N[1:nsite,year])
+    anndet[year]<-mean(p[1:nsite,1:nrep,year])
   }
   
   # Computation of fit statistic (Bayesian p-value)
@@ -239,8 +214,8 @@ trend.model<-nimbleCode({
       }
     }
   }
-  fit <- sum(E2[,,])# Sum up squared residuals for actual data set
-  fit.new <- sum(E2.new[,,]) # Sum up for replicate data sets
+  fit <- sum(E2[1:nsite,1:nrep,1:nyear])# Sum up squared residuals for actual data set
+  fit.new <- sum(E2.new[1:nsite,1:nrep,1:nyear]) # Sum up for replicate data sets
 }) ## end of nimble code chunk
 
 
@@ -251,53 +226,26 @@ trend.model<-nimbleCode({
 ## MUST BE FOR ALL PARAMETERS
 ## NIMBLE CAN HAVE CONVERGENCE PROBLEMS IF DIFFERENT INITS ARE SPECIFIED: https://groups.google.com/g/nimble-users/c/dgx9ajOniG8
 
-# Missing values (NAs) or non-finite values were found in model variables: fledglings
-inits.trend <- list(intercept.succ = rnorm(1,0, 0.01),
-                           #rain.succ = rnorm(1,0, 1),
-                           #elevation.succ = rnorm(1,0, 1),
-                           mig.succ = rnorm(1,0, 1),
-                           age.succ = rnorm(1,0, 1),
-                           agemig.succ = rnorm(1,0, 1),
-                           succ.year = rnorm(length(unique(REKI.fec$year)),0, 1),
-                           fec.year = rnorm(length(unique(REKI.fec$year)),0, 1),
-                           succ.nest = rnorm(length(unique(REKI.fec$year_id)),0, 1),
-                           intercept.fec1 = rnorm(1,0, 0.01),
-                           #intercept.fec2 = rnorm(1,0, 0.01),
-                           intercept.fec3 = rnorm(1,0, 0.01),
-                           feed.fec = rnorm(1,0, 1),
-                           rain.fec = rnorm(1,0, 1),
-                           rodent.fec = rnorm(1,0, 1),
-                           prob=ifelse(flmat>0,1,0),
-                           #mig.fec = rnorm(1,0, 1),
-                           age.fec = rnorm(1,0, 1),
-                           sigma.nest= runif(1,0,2),
-                           sigma.year= runif(1,0,5)
-                           
-)
+inits.trend <- list(N = Nst,
+                    trend=runif(1,-2,2),
+                    loglam = runif(1,-2,2),
+                    sigma.site = runif(1,0,2),
+                    sigma.year=runif(1,-2,2),
+                    sigma.p=runif(1,-2,2),
+                    beta.canopy=runif(1,-2,2),
+                    beta.rain=runif(1,-2,2),
+                    beta.treeheight=runif(1,-2,2),
+                    beta.elev=runif(1,-2,2),
+                    bwind=runif(1,-2,2),
+                    bridge=runif(1,-2,2),
+                    btime=runif(1,-2,2),
+                    bact=runif(1,-2,2),
+                    p0 = runif(nyears,0,1))
 
 
-#### DISTINGUISH CONSTANTS AND DATA----
-# Constants are values that do not change, e.g. vectors of known index values or the indices used to define for loops
-# Data are values that you might want to change, basically anything that only appears on the left of a ~
-productivity.constants <- list(AGE=as.numeric(scale(REKI.fec.nest$age_cy)), # also tried withou scaling and it makes no difference at all
-                               #ALT=as.numeric(scale(REKI.fec.nest$ALT)),
-                               #RAIN=as.numeric(scale(REKI.fec.nest$rain_days)),
-                               RAIN_SPELL=as.numeric(scale(REKI.fec.nest$rain_spell)),
-                               MIG=ifelse(is.na(REKI.fec.nest$MIG_PRED),0.5,REKI.fec.nest$MIG_PRED),
-                               FEED=ifelse(is.na(REKI.fec.nest$FEED),0,as.numeric(scale(REKI.fec.nest$FEED))),
-                               PREY=as.numeric(scale(REKI.fec.nest$rodent_median)),   ### alternatively tried med and het but gave instant invalid parent error for Z
-                               year=REKI.fec.nest$year-min(REKI.fec.nest$year)+1,
-                               nyears=length(unique(REKI.fec.nest$year)),
-                               nestID=as.numeric(as.factor(REKI.fec$year_id)),
-                               nnests=length(unique(as.numeric(as.factor(REKI.fec$year_id)))),
-                               N=dim(REKI.fec.nest)[1])
-
-
-productivity.data <- list(fledglings=ifelse(flmat>0,1,0))
 
 # 5.3. Define parameters to be monitored
-parameters.productivity <- c("intercept.succ","mig.succ","age.succ","agemig.succ","succ.year",
-                             "intercept.fec1","intercept.fec3","rodent.fec","feed.fec","rain.fec","age.fec")  ##"mig.fec", "elevation.succ","rain.succ",
+parameters.trend <- c("trend","totalN","fit", "fit.new","anndet")
 
 
 # MCMC settings
@@ -305,18 +253,35 @@ parameters.productivity <- c("intercept.succ","mig.succ","age.succ","agemig.succ
 n.iter <- 50000
 n.burnin <- 25000
 n.chains <- 4
+inits.trend <- list(inits.trend, inits.trend, inits.trend,inits.trend)
 
 
 # PRELIMINARY TEST OF NIMBLE MODEL TO IDENTIFY PROBLEMS --------------------
-test <- nimbleModel(code = prod.model,
-                    constants=productivity.constants,
-                    data = productivity.data,
-                    inits = inits.productivity,
+test <- nimbleModel(code = trend.model,
+                    constants=trend.constants,
+                    data = trend.data,
+                    inits = inits.trend,
                     calculate=TRUE)
+
+test$initializeInfo()
 
 ### make sure that none of the logProbs result in NA or -Inf as the model will not converge
 test$calculate()
+test$calculate(nodes="lam.site") # this causes a NaN when the nest probability (z[i] = 0)
+test$logProb_lam.site
+test$logProb_lam.year
+test$logProb_tau.lp
+test$logProb_tau.year
+test$logProb_M
+test$logProb_lambda
 
+
+
+test$logProbs$anndet
+# Missing values (NAs) or non-finite values were found in model variables:
+# lam.site, lam.year, tau.lp, tau.year,
+# lambda, M, p, lp, mu.lp, anndet, eval, sd.resi,
+# E, E2, M.new, E.new, E2.new, fit, fit.new.
 
 test$initializeInfo()
 #help(modelInitialization)
@@ -364,62 +329,50 @@ bird_s$N[is.na(SURVEYDATA$time)]<-NA
 
 ### create array to be filled with data
 BIRD.y<-array(NA, dim=c(nsites,3,nyears))
-Nst<-array(NA, dim=c(nsites,nyears))
 
-#### CAST THE MOLTEN DATA FRAME INTO MATRIX WITH 1 COLUMN PER COUNT and fill in array
-for (y in 1:nyears){
-b<-subset(bird_s, Year==c(2011:YEAR)[y])
-b$YearPoint<-paste(b$Point,b$Year,sep = "_")		# creates a matching expression for each transect and count
-dis<-cast(b, YearPoint~Count, value="N")							# pivot table to create data frame with one line per transect per year, and each column reflecting the observations per distance band on each count survey
-dis<-dis[order(dis$YearPoint,decreasing=F),]
-BIRD.y[,,y]<-as.matrix(dis[,2:4], dimnames=NULL)
-dis[is.na(dis)]<-1
-Nst[,y]<-apply(dis[,2:4], MARGIN=1, FUN=max, na.rm=T)+1
-}
+#### GET THE MAXIMUM COUNT PER POINT PER YEAR FOR INITIAL VALUES
+Nst<-as.matrix(bird_s %>%
+                 mutate(N=ifelse(is.na(N),median(bird_s$N, na.rm=T),N)) %>%   ### fill in missing values - switch to max if there is invalid parent error
+                 group_by(Point, Year) %>%
+                 summarise(K=max(N, na.rm=T)) %>%
+                 spread(key=Year,value=K, fill=max(bird_s$N,na.rm=T)) %>%
+                 ungroup() %>%
+                 arrange(Point) %>%
+                 dplyr::select(-Point))
+
 
 
 
 ######################################################################################################
-########## CREATE INPUT DATA FOR JAGS
+########## CREATE INPUT DATA FOR NIMBLE ------------------------
 #######################################################################################################
 
-### Bundle data into a single list passed on to JAGS
-
+#### DISTINGUISH CONSTANTS AND DATA
+# Constants are values that do not change, e.g. vectors of known index values or the indices used to define for loops
+# Data are values that you might want to change, basically anything that only appears on the left of a ~
 R = nrow(BIRD.y)
 T = ncol(BIRD.y)
 nyears = dim(BIRD.y)[3]
-bugs.data<-list(M = BIRD.y,
-                nsite=nsites,
-                nrep=T,
-                primocc=seq(1:nyears),
-                nyear=nyears,
-                elev=elev,
-                treeheight=treeheight,
-                canopy=canopy,
-                wind=wind,
-                ridge=ridge,
-                time=time,
-                ACT=ACT)
+trend.constants <- list(nsite=dim(BIRD.y)[1],
+                            nrep=ncol(BIRD.y),
+                            primocc=seq(1:(dim(BIRD.y)[3])),
+                            nyear=dim(BIRD.y)[3],
+                            elev=siteCov$elev,
+                            treeheight=siteCov$tree,
+                            canopy=siteCov$canopy,
+                            rain=rain$rain,
+                            wind=wind,
+                            ridge=siteCov$ridge,
+                            time=time,
+                            ACT=ACT)
 
 
-###############################################################################
-####   SET INITIAL VALUES FOR THE MODEL RUN    ################################
-###############################################################################
+trend.data <- list(M = BIRD.y)
 
-#Nst <- apply(BIRD.y, c(1, 3), max) + 1
-#Nst[is.na(Nst)] <- 1
 
-inits <- function(){list(N = Nst,
-loglam = runif(1, -3, 3),
-sigma.site = runif(1, 0, 1),
-beta.canopy=runif(1,-5,5),
-beta.treeheight=runif(1,-5,5),
-beta.elev=runif(1,-5,5),
-bwind=runif(1,-5,5),
-bridge=runif(1,-5,5),
-btime=runif(1,-5,5),
-bact=runif(1,-5,5),
-p0 = runif(nyears, 0, 1))}
+
+
+
 
 ###############################################################################
 ####   DEFINE RUN SETTINGS AND OUTPUT DATA     ################################
