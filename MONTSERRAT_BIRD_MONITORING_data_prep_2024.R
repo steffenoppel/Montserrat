@@ -7,7 +7,7 @@
 ##### Montserrat forest bird surveys data preparation ####
 ##### written in September 2024 by Filibert Heim  #### 
 
-##### 1: load packages and make other preparations ####
+##### 1: load packages and make other preparations ---------- ####
 
 # load packages
 library(RODBC)
@@ -26,10 +26,12 @@ getwd()
 setwd('C:/Users/filib/Documents/Praktika/Sempach/Montserrat') # for Filibert
 setwd('C:/STEFFEN/OneDrive - THE ROYAL SOCIETY FOR THE PROTECTION OF BIRDS/STEFFEN/RSPB/UKOT/Montserrat/Analysis/Population_status_assessment/AnnualMonitoring/Montserrat') # for Steffen
 
+
+
 #### 2: load data from ms access database ####
 
 # connect with database to load data from query and afterwards close connection again 
-db <- odbcConnectAccess2007('Montserrat_Birds_2024.accdb') # change name of the db to the actual one 
+db <- odbcConnectAccess2007('data/Montserrat_Birds_2024.accdb') # change name of the db to the actual one 
 tblVisit <- sqlFetch(db, 'tblVisit') # observation level covariates
 birds <- sqlFetch(db, 'tblBirdData') # bird count data
 Point_hab <- sqlFetch(db, 'point_habitat_data')
@@ -37,7 +39,8 @@ Point_tree <- sqlFetch(db, 'point_tree_data')
 species <- sqlFetch(db, 'lkSpecies')
 odbcClose(db)
 
-load("data/Forest_bird_monitoring_data_peparation_db_for_steffen2024.RData")
+save.image("data/Montserrat_Birds_2024_accdb.RData")
+load("data/Montserrat_Birds_2024_accdb.RData")
 
 #### 3: prepare siteCovs ####
 
