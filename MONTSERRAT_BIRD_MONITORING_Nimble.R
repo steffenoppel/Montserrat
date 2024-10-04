@@ -18,8 +18,8 @@ library(dplyr)
 library(dtplyr)
 library(lubridate)
 library(ggplot2)
-library(knitr)
-library(rmarkdown)
+# library(knitr)
+# library(rmarkdown)
 library(MCMCvis)
 library(nimble)
 library(basicMCMCplots) # for trace plots called chainsPlot
@@ -279,7 +279,7 @@ trend.constants <- list(nsite=nsites,
 ## MUST BE FOR ALL PARAMETERS
 ## NIMBLE CAN HAVE CONVERGENCE PROBLEMS IF DIFFERENT INITS ARE SPECIFIED: https://groups.google.com/g/nimble-users/c/dgx9ajOniG8
 
-inits.trend <- list(N = Nst,
+inits.trend <- list(#N = Nst,
                     trend=runif(1,-2,2),
                     loglam = runif(1,-2,2),
                     sigma.site = runif(1,0,2),
@@ -296,7 +296,7 @@ inits.trend <- list(N = Nst,
                     bact=2,
                     p0 = runif(nyears,0.1,0.9))
 inits.trend$lam.site<-rnorm(nsites,inits.trend$loglam,inits.trend$sigma.site)
-inits.trend$lam.year<-rnorm(nyears,(inits.trend$trend*seq(1:(dim(BIRD.y)[3]))),inits.trend$sigma.year)
+inits.trend$lam.year<-rnorm(nyears,(inits.trend$trend*seq(1:(nyears))),inits.trend$sigma.year)
 
 
 
@@ -316,6 +316,24 @@ n.chains <- 3
 
 
 # PRELIMINARY TEST OF NIMBLE MODEL TO IDENTIFY PROBLEMS --------------------
+
+### fill in array for bird data and initial values
+bird_s<-SURVEYDATA[,c(1,2,3,4,14)] %>%
+  arrange(Point,year,Count) %>%
+  rename(N=5) %>%
+  mutate(N=if_else(is.na(VisitID),NA,N)) %>%  ### RE-INTRODUCE THE NAs for COUNTS THAT DID NOT TAKE PLACE #####
+dplyr::select(Point,year,Count,N)
+BIRD.y<-array(NA, dim=c(nsites,3,nyears))
+for (y in 2011:YEAR){
+  x<-bird_s %>%
+    dplyr::filter(year==y) %>%
+    dplyr::select(Point, Count, N) %>%
+    tidyr::spread(key=Count, value=N) %>%
+    dplyr::arrange(Point)
+  yc<-match(y,c(2011:YEAR))						## translates the year (2011, 2012, etc.) into consecutive number (1,2,...) for array dimensions
+  BIRD.y[,,yc]<-as.matrix(x[,2:4])
+}
+trend.data <- list(M = BIRD.y)
 test <- nimbleModel(code = trend.model,
                     constants=trend.constants,
                     data = trend.data,
@@ -373,7 +391,7 @@ inits.trend$lp = array(rnorm(trend.constants$nsite*trend.constants$nrep*trend.co
 #setup parallel backend to use 8 processors - collapsed my machine
 cl<-makeCluster(4)
 registerDoParallel(cl)
-Result <- foreach(s=SPECIES, .packages=c('nimble',"tidyverse","MCMCvis")) %dopar% {		#.combine = rbind,
+Result <- foreach(s=SPECIES, .packages=c('nimble',"tidyverse","MCMCvis","tidyverse","dplyr","data.table")) %dopar% {		#.combine = rbind,
 
 # for (s in SPECIES){
 # #s="MTOR"
