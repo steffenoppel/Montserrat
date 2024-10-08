@@ -503,7 +503,7 @@ TRENDMOD <- nimbleMCMC(code = trend.model,
                             summary=T)
 
 
-saveRDS(TRENDMOD,sprintf("output/%s_trend_model_nimble.rds"))
+saveRDS(TRENDMOD,sprintf("output/%s_trend_model_nimble.rds",s))
 
 
 
@@ -515,7 +515,7 @@ out<- as.data.frame(MCMCsummary(TRENDMOD$samples, params=c("trend","totalN","ann
 out$parameter<-row.names(out)
 out$species<-s
 names(out)[c(3,4,5)]<-c('lcl','median', 'ucl')
-fwrite(out,sprintf("output/%s_trend_estimates.csv"))
+fwrite(out,sprintf("output/%s_trend_estimates.csv",s))
 
 
 # MCMCplot(TRENDMOD$samples, params=c("trend","totalN","anndet"))
