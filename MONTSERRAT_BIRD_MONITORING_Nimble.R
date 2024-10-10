@@ -53,16 +53,17 @@ nsites<-length(unique(siteCov$Point))
 nyears<-length(unique(countdata$year))
 
 
-### summarise rainfall from Jan to March, productivity from PREVIOUS year will affect count in current year
-rain<-fread("data/MontserratRain2005_2023.csv",fill=TRUE) %>%
-  dplyr::filter(Variable=="RainMM") %>%
-  dplyr::filter(YEAR %in% seq(2010,2024,1)) %>%
-  dplyr::select(-Variable,-Total) %>%
-  gather(key="Month", value="mm",-YEAR) %>%
-  dplyr::filter(Month %in% c('JAN','FEB','MAR')) %>%
-  group_by(YEAR) %>%
-  summarise(rain=sum(mm)) %>%
-  mutate(rain=scale(rain)[,1])
+### removed on 8 Oct 2024 because it did not explain anything
+# ### summarise rainfall from Jan to March, productivity from PREVIOUS year will affect count in current year
+# rain<-fread("data/MontserratRain2005_2023.csv",fill=TRUE) %>%
+#   dplyr::filter(Variable=="RainMM") %>%
+#   dplyr::filter(YEAR %in% seq(2010,2024,1)) %>%
+#   dplyr::select(-Variable,-Total) %>%
+#   gather(key="Month", value="mm",-YEAR) %>%
+#   dplyr::filter(Month %in% c('JAN','FEB','MAR')) %>%
+#   group_by(YEAR) %>%
+#   summarise(rain=sum(mm)) %>%
+#   mutate(rain=scale(rain)[,1])
 
 ###############################################################################
 ############## CREATE SITE COVARIATE DATA INPUT MATRIX   ######################
@@ -93,7 +94,7 @@ SURVEYDATA<-countdata %>%
 ### create array for each covariate
 
 wind<-array(NA, dim=c(nsites,3,nyears))
-# rain<-array(NA, dim=c(nsites,3,nyears))
+rain<-array(NA, dim=c(nsites,3,nyears))
 time<-array(NA, dim=c(nsites,3,nyears))
 day<-array(NA, dim=c(nsites,3,nyears))
 ACT<-array(NA, dim=c(nsites,3,nyears))				## REPLACED ON 2 MAY WITH RAINFALL AMOUNT
@@ -117,8 +118,8 @@ for (y in 2011:YEAR){
   x<-obsC %>% dplyr::select(Point, Count, activity) %>% tidyr::spread(key=Count, value=activity) %>% dplyr::arrange(Point)
   ACT[,,y]<-as.matrix(x[,2:4])
   
-  # x<-obsC %>% dplyr::select(Point, Count, Rain) %>% tidyr::spread(key=Count, value=Rain) %>% dplyr::arrange(Point)
-  # rain[,,y]<-as.matrix(x[,2:4])
+  x<-obsC %>% dplyr::select(Point, Count, Rain) %>% tidyr::spread(key=Count, value=Rain) %>% dplyr::arrange(Point)
+  rain[,,y]<-as.matrix(x[,2:4])
 
 }
 
@@ -143,9 +144,9 @@ for (d in 1:nyears){							### replace missing dates with mean for each survey r
   wind[is.na(wind[,1,d]),1,d]<-0
   wind[is.na(wind[,2,d]),2,d]<-0
   wind[is.na(wind[,3,d]),3,d]<-0
-  # rain[is.na(rain[,1,d]),1,d]<-0
-  # rain[is.na(rain[,2,d]),2,d]<-0
-  # rain[is.na(rain[,3,d]),3,d]<-0
+  rain[is.na(rain[,1,d]),1,d]<-0
+  rain[is.na(rain[,2,d]),2,d]<-0
+  rain[is.na(rain[,3,d]),3,d]<-0
 }
 
 
@@ -165,10 +166,11 @@ trend.model<-nimbleCode({
   loglam~dunif(-5,5)          ##  mean abundance prior
   trend~dunif(-5,5)         ##  trend prior
   beta.elev~dunif(-2,2)
-  beta.rain~dunif(-2,2)
+  #beta.rain~dunif(-2,2)
   beta.canopy~dunif(-2,2)
   beta.treeheight~dunif(-2,2)
-  bwind~dunif(-2,2)
+  bwind~dunif(-2,0)   ## wind can only have negative effect on detection
+  brain~dunif(-2,0)   ## rain can only have negative effect on detection
   btime~dunif(-2,2)
   bday~dunif(-2,2)
   bridge~dunif(-2,2)
@@ -179,7 +181,7 @@ trend.model<-nimbleCode({
     lam.site[i]~dnorm(loglam,tau=tau.site)    ## site-specific random effect with hierarchical centering from Kery email 5 June 2018
   }
   tau.site<-1/(sigma.site*sigma.site)
-  sigma.site~dunif(0,10)
+  sigma.site~dunif(0,2)
   
   ## YEAR RANDOM EFFECT FOR ABUNDANCE AND ANNUALLY VARYING DETECTION PROBABILITY ##
   for(year in 1:nyear){
@@ -188,16 +190,16 @@ trend.model<-nimbleCode({
     lam.year[year]~dnorm(trend*primocc[year],tau=tau.year)    ## year-specific random effect with hierarchical centering from Kery email 5 June 2018
   }
   tau.lp<-1/(sigma.p*sigma.p)
-  sigma.p~dunif(0,10)
+  sigma.p~dunif(0,2)
   tau.year<-1/(sigma.year*sigma.year)
-  sigma.year~dunif(0,10)
+  sigma.year~dunif(0,2)
   
   
   ######### State and observation models ##############
   for(year in 1:nyear){
     for(i in 1:nsite){
       log(lambda[i,year])<- lam.year[year]+
-        beta.rain*rain[year]+
+        #beta.rain*rain[year]+
         beta.elev*elev[i]+
         beta.treeheight*treeheight[i]+
         beta.canopy*canopy[i]+
@@ -213,6 +215,7 @@ trend.model<-nimbleCode({
           bday*day[i,t,year]+
           bridge*ridge[i]+
           bwind*wind[i,t,year]+
+          brain*rain[i,t,year]+
           bact*ACT[i,t,year]
         
       }
@@ -223,28 +226,41 @@ trend.model<-nimbleCode({
     anndet[year]<-mean(p[1:nsite,1:nrep,year])
   }
   
-  # # Computation of fit statistic (Bayesian p-value)
-  # # Fit statistic for observed data
-  # # Also, generate replicate data and compute fit stats for them
-  # for(year in 1:nyear){
-  #   for(i in 1:nsite){
-  #     for(t in 1:nrep){
-  # 
-  #       # Actual data
-  #       eval[i,t,year] <-N[i,year]*p[i,t,year] # Expected value
-  #       sd.resi[i,t,year]<-sqrt(eval[i,t,year]*(1-p[i,t,year])) +0.5
-  #       E[i,t,year]<-(M[i,t,year]-eval[i,t,year])/ sd.resi[i,t,year]
-  #       E2[i,t,year] <- pow(E[i,t,year],2)
-  # 
-  #       # Replicate data sets
-  #       M.new[i,t,year]~dbin(p[i,t,year],N[i,year])
-  #       E.new[i,t,year]<-(M.new[i,t,year]-eval[i,t,year])/sd.resi[i,t,year]
-  #       E2.new[i,t,year] <- pow(E.new[i,t,year], 2)
-  #     }
-  #   }
-  # }
+  # Computation of fit statistic (Bayesian p-value)
+  # Fit statistic for observed data
+  # Also, generate replicate data and compute fit stats for them
+  for(year in 1:nyear){
+    for(i in 1:nsite){
+      for(t in 1:nrep){
+
+        # Actual data
+        eval[i,t,year] <-N[i,year]*p[i,t,year] # Expected value
+        sd.resi[i,t,year]<-sqrt(eval[i,t,year]*(1-p[i,t,year])) +0.5
+        E[i,t,year]<-(M[i,t,year]-eval[i,t,year])/ sd.resi[i,t,year]
+        E2[i,t,year] <- pow(E[i,t,year],2)
+
+        # Replicate data sets
+        M.new[i,t,year]~dbin(p[i,t,year],N[i,year])
+        E.new[i,t,year]<-(M.new[i,t,year]-eval[i,t,year])/sd.resi[i,t,year]
+        E2.new[i,t,year] <- pow(E.new[i,t,year], 2)
+      }
+    }
+  }
+  
+  ### NIMBLE CANNOT SUM OVER 3 DIMENSIONS, hence the JAGS code does not work
   # fit <- sum(E2[1:nsite,1:nrep,1:nyear])# Sum up squared residuals for actual data set
   # fit.new <- sum(E2.new[1:nsite,1:nrep,1:nyear]) # Sum up for replicate data sets
+  
+  ## alternative solution from https://groups.google.com/g/nimble-users/c/fI8fXBpgIAE
+  for(year in 1:nyear){
+    for(i in 1:nsite){
+      fsum[i,year]<- sum(E2[i,1:nrep,year])
+      nsum[i,year] <- sum(E2.new[i,1:nrep,year])
+    }
+  }
+  fit <- sum(fsum[1:nsite,1:nyear])
+  fit.new <- sum(nsum[1:nsite,1:nyear])
+  
 }) ## end of nimble code chunk
 
 
@@ -264,7 +280,7 @@ trend.constants <- list(nsite=nsites,
                         elev=siteCov$elev,
                         treeheight=siteCov$tree,
                         canopy=siteCov$canopy,
-                        rain=rain$rain,
+                        rain=rain,
                         wind=wind,
                         day=day,
                         ridge=siteCov$ridge,
@@ -286,10 +302,11 @@ inits.trend <- list(#N = Nst,
                     sigma.year=runif(1,0,2),
                     sigma.p=runif(1,0,2),
                     beta.canopy=runif(1,-2,2),
-                    beta.rain=runif(1,-2,2),
+                    #beta.rain=runif(1,-2,2),
                     beta.treeheight=runif(1,-2,2),
                     beta.elev=runif(1,-2,2),
                     bwind=-1,
+                    brain=-1,
                     bridge=-1,
                     btime=-1,
                     bday=1,
@@ -305,13 +322,13 @@ inits.trend$lam.year<-rnorm(nyears,(inits.trend$trend*seq(1:(nyears))),inits.tre
 ####   DEFINE RUN SETTINGS AND OUTPUT DATA----     ################################
 
 # Define parameters to be monitored
-parameters.trend <- c("trend","totalN","anndet")  #"fit", "fit.new",
+parameters.trend <- c("fit", "fit.new","trend","totalN","anndet")  #
 
 
 # MCMC settings
 # number of posterior samples per chain is n.iter - n.burnin
-n.iter <- 70000
-n.burnin <- 50000
+n.iter <- 250000
+n.burnin <- 150000
 n.chains <- 3
 
 
@@ -343,7 +360,7 @@ test <- nimbleModel(code = trend.model,
 # USE TEST VALUES TO SUPPLEMENT INITS
 inits.trend$lp = array(rnorm(trend.constants$nsite*trend.constants$nrep*trend.constants$nyear, c(test$mu.lp), inits.trend$sigma.p),
                        dim= c(trend.constants$nsite, trend.constants$nrep,trend.constants$nyear))  
-
+test$calculate()
 # inits.trend$p0
 
 # test$initializeInfo()
@@ -437,13 +454,13 @@ for (y in 2011:YEAR){
     dplyr::arrange(Point)
   inits.y[,,yc]<-as.matrix(x[,2:4])
   
-  # x<-bird_s %>%
-  #   mutate(N=ifelse(is.na(N),median(bird_s$N, na.rm=T),N)) %>%   ### fill in missing values
-  #   dplyr::filter(year==y) %>%
-  #   dplyr::select(Point, Count, N) %>%
-  #   tidyr::spread(key=Count, value=N) %>%
-  #   dplyr::arrange(Point)
-  # inits.new[,,yc]<-as.matrix(x[,2:4])
+  x<-bird_s %>%
+    mutate(N=ifelse(is.na(N),median(bird_s$N, na.rm=T),N)) %>%   ### fill in missing values
+    dplyr::filter(year==y) %>%
+    dplyr::select(Point, Count, N) %>%
+    tidyr::spread(key=Count, value=N) %>%
+    dplyr::arrange(Point)
+  inits.new[,,yc]<-as.matrix(x[,2:4])
   
 }
 
@@ -477,7 +494,7 @@ inits.trend$lp = array(rnorm(trend.constants$nsite*trend.constants$nrep*trend.co
                        dim= c(trend.constants$nsite, trend.constants$nrep,trend.constants$nyear))
 inits.trend$N = Nst
 inits.trend$M = inits.y
-#inits.trend$M.new = inits.new
+inits.trend$M.new = inits.new
 
 allchaininits.trend <- list(inits.trend, inits.trend, inits.trend)
 
@@ -507,6 +524,21 @@ saveRDS(TRENDMOD,sprintf("output/%s_trend_model_nimble.rds",s))
 
 
 
+###############################################################################
+####   EVALUATE MODEL FIT WITH BAYESIAN P VALUE   #############################
+###############################################################################
+### COMBINE SAMPLES ACROSS CHAINS
+MCMCout<-as_tibble(rbind(TRENDMOD$samples[[1]],TRENDMOD$samples[[2]],TRENDMOD$samples[[3]]))
+
+### PLOT AND SAVE GoF PLOT
+ylow<-round((min(MCMCout$fit)-50)/1000,1)*1000
+yup<-round((max(MCMCout$fit)+50)/1000,1)*1000
+pdf(sprintf("output/%s_trendmodel_fit2024.pdf",s), width=10, height=10, title="")
+plot(MCMCout$fit, MCMCout$fit.new, main = "", xlab = "Discrepancy actual data", ylab = "Discrepancy replicate data", frame.plot = FALSE, xlim = c(ylow, yup), ylim = c(ylow, yup))
+abline(0, 1, lwd = 2, col = "black")
+dev.off()
+
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # EXAMINE OUTPUT AND DIAGNOSTICS WITH MCMCvis
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -514,8 +546,10 @@ saveRDS(TRENDMOD,sprintf("output/%s_trend_model_nimble.rds",s))
 out<- as.data.frame(MCMCsummary(TRENDMOD$samples, params=c("trend","totalN","anndet")))
 out$parameter<-row.names(out)
 out$species<-s
+out$BayesP<-mean(MCMCout$fit > MCMCout$fit.new)
+out$GoFSlope<-mean(MCMCout$fit) / mean(MCMCout$fit.new)
 names(out)[c(3,4,5)]<-c('lcl','median', 'ucl')
-fwrite(out,sprintf("output/%s_trend_estimates.csv",s))
+fwrite(out,sprintf("output/%s_trend_estimates2024.csv",s))
 
 
 # MCMCplot(TRENDMOD$samples, params=c("trend","totalN","anndet"))
@@ -528,23 +562,6 @@ fwrite(out,sprintf("output/%s_trend_estimates.csv",s))
 
 
 
-
-
-
-
-###############################################################################
-####   EVALUATE MODEL FIT WITH BAYESIAN P VALUE   #############################
-###############################################################################
-
-# ylow<-round((min(TRENDMOD$sims.list$fit)-50)/1000,1)*1000
-# yup<-round((max(TRENDMOD$sims.list$fit)+50)/1000,1)*1000
-
-# pdf(sprintf("MONTSERRAT_%s_model_fit2023.pdf",s), width=10, height=10, title="")
-# plot(model$sims.list$fit, model$sims.list$fit.new, main = "", xlab = "Discrepancy actual data", ylab = "Discrepancy replicate data", frame.plot = FALSE, xlim = c(ylow, yup), ylim = c(ylow, yup))
-# abline(0, 1, lwd = 2, col = "black")
-# dev.off()
-# pval<-mean(TRENDMOD$samples[[1]]$trend > TRENDMOD$samples$fit)
-# slope<-mean(TRENDMOD$mean$fit) / mean(TRENDMOD$mean$fit.new)
 
 
 
