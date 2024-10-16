@@ -127,20 +127,27 @@ obsCov$time[is.na(obsCov$time)]<-median(obsCov$time, na.rm=T)
 ##### digression to calculate activity covariate for obsCov BEFORE ALL OTHER SPECIES ARE ELIMINATED #####
 ACT<-birds %>% 
   group_by(VisitID) %>% 
-  summarise(activity = sum(Number,na.rm=T))
+  summarise(activity = sum(Number,na.rm=T)) %>%
+  filter(!is.na(VisitID))
 dim(ACT)
 ACT %>% filter(is.na(activity))
 
 # first, check for duplicate entries in the data base bird count data for each species - here we will only care for all data between 2011 and the most recent year and SPECIES
 birds %>% 
   filter(VisitID %in% obsCov$VisitID, Species %in% SPECIES) %>% # remove all observations from before 2011 which were done with another sampling scheme
-  group_by(VisitID, Species) %>% summarise(n=length(Number)) %>% filter(n>1) %>% ungroup()
+  group_by(VisitID, Species) %>%
+  summarise(n=length(Number)) %>%
+  filter(n>1) %>%
+  filter(!is.na(VisitID)) %>%
+  ungroup()
 # okay, there are several duplicates to deal with - NEED TO BE SUMMED UP DUE TO HISTORIC DATA ENTRY (distance sampling)
 
 # sum the numbers up, because a distance sampling framework was applied until 2011 and the duplicate entries refer to different distance bands, for all other cases: we cant solve it so we treat them the same 
 birds <- birds %>%
   filter(VisitID %in% obsCov$VisitID, Species %in% SPECIES) %>% # remove all observations from before 2011 which were done with another sampling scheme
-  group_by(VisitID, Species) %>% summarise(Number = sum(Number)) %>% ungroup()
+  group_by(VisitID, Species) %>%
+  summarise(Number = sum(Number)) %>%
+  filter(!is.na(VisitID)) %>% ungroup()
 
 ## create a matrix with 0 counts
 birdmat<-birds %>% spread(key=Species, value=Number, fill=0)
@@ -159,7 +166,7 @@ birdmat<-birds %>% spread(key=Species, value=Number, fill=0)
 #   mutate(Number = ifelse(is.na(Number), 0, Number), Number = ifelse(is.na(VisitID), NA, Number)) %>%  # fill in 0 for counts where no birds of the species were seen
 #   select(VisitID, Species, year, Point, Count, Number)
 
-countdata<-obsCov %>%
+countdata<-obsCov %>% 
   left_join(ACT, by="VisitID") %>%
   left_join(birdmat, by="VisitID")
 dim(countdata)

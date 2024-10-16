@@ -339,7 +339,7 @@ bird_s<-SURVEYDATA[,c(1,2,3,4,14)] %>%
   arrange(Point,year,Count) %>%
   rename(N=5) %>%
   mutate(N=if_else(is.na(VisitID),NA,N)) %>%  ### RE-INTRODUCE THE NAs for COUNTS THAT DID NOT TAKE PLACE #####
-dplyr::select(Point,year,Count,N)
+  dplyr::select(Point,year,Count,N)
 BIRD.y<-array(NA, dim=c(nsites,3,nyears))
 for (y in 2011:YEAR){
   x<-bird_s %>%
@@ -506,7 +506,7 @@ allchaininits.trend <- list(inits.trend, inits.trend, inits.trend)
 ###############################################################################
 
 
-### this takes 14-15 mins for 50000 iterations and converges in that time
+### this takes 3-5 hrs for 250000 iterations and converges for most species
 TRENDMOD <- nimbleMCMC(code = trend.model,
                             constants=trend.constants,
                             data = trend.data,
@@ -623,8 +623,29 @@ fwrite(out,sprintf("output/%s_trend_estimates2024.csv",s))
 
 
 
-write.table(annestimates,"output/Annual_estimates2024.csv", row.names=F, sep=",")
-write.table(trendout,"output/Trend_estimates2024.csv", row.names=F, sep=",")
+############################################################################################################
+####   COLLATE DATA FROM INDIVIDUAL MODEL OUTPUT FILES          #############################
+############################################################################################################
+#setwd("C:\\STEFFEN\\RSPB\\Montserrat\\Analysis\\Population_status_assessment\\AnnualMonitoring\\Montserrat\\output")
+setwd("C:\\STEFFEN\\OneDrive - THE ROYAL SOCIETY FOR THE PROTECTION OF BIRDS\\STEFFEN\\RSPB\\UKOT\\Montserrat\\Analysis\\Population_status_assessment\\AnnualMonitoring\\Montserrat\\output")
+#setwd("C:\\Users\\sop\\Documents\\Steffen\\RSPB\\Montserrat\\Montserrat\\output")
+nsites<-length(unique(siteCov$Point))
+fullnames<-c("Montserrat Oriole", "Forest Thrush", "Bridled Quail-Dove", "Brown Trembler",
+             "Antillean Crested Hummingbird","Purple-throated Carib",
+             "Pearly-eyed Thrasher","Green-throated Carib","Scaly-breasted Thrasher","Scaly-naped Pigeon",
+             "Caribbean Elaenia","Bananaquit")
+allout<-list.files(pattern="trend_estimates2024.csv")
+annestimates<-tibble()
+trendout<-tibble()
+for (f in allout){
+	x<-fread(f)
+	trendout<-trendout %>% bind_rows(x %>% filter(parameter=="trend"))
+	annestimates<-annestimates %>% bind_rows(x %>% filter(substr(parameter,1,6)=="totalN"))
+}
+
+
+write.table(annestimates,"Annual_estimates2024.csv", row.names=F, sep=",")
+write.table(trendout,"Trend_estimates2024.csv", row.names=F, sep=",")
 
 
 
@@ -647,21 +668,24 @@ trendout$fullspec<-fullnames[match(trendout$species, SPECIES)]
 
 ################ PLOT FOR ABUNDANCE TREND ####################
 trendout<-trendout %>%
-  mutate(col=ifelse(lower95CI<0,ifelse(upper95CI<0,"darkred","black"),ifelse(upper95CI>0,"forestgreen","black"))) %>%
+  mutate(col=ifelse(lcl<0,ifelse(ucl<0,"darkred","black"),ifelse(ucl>0,"forestgreen","black"))) %>%
   mutate(col=ifelse(species=="CAEL","darkred",col))
-annestimates %>% filter(Year!=2020) %>%
-  mutate(col = as.factor(trendout$col[match(species,trendout$species)])) %>%
+annestimates %>% 
+	mutate(Year=rep(seq(2011,2024), length(allout))) %>%
+	filter(Year!=2020) %>%
+  	mutate(col = as.factor(trendout$col[match(species,trendout$species)])) %>%
 
 
 ggplot()+
-geom_line(aes(x=Year, y=trend,col=col), size=1)+facet_wrap(~fullspec, ncol=2, scales="free_y")+
-geom_point(aes(x=Year, y=trend,col=col), size=2)+
-#geom_ribbon(data=annestimates,aes(x=Year, ymin=lower95CI,ymax=upper95CI),alpha=0.2)+
-geom_errorbar(aes(x=Year, ymin=lower95CI,ymax=upper95CI,col=col), width=.1) +
+	geom_line(aes(x=Year, y=mean,col=col), linewidth=1)+
+	facet_wrap(~fullspec, ncol=2, scales="free_y")+
+geom_point(aes(x=Year, y=mean,col=col), size=2)+
+#geom_ribbon(data=annestimates,aes(x=Year, ymin=lcl,ymax=ucl),alpha=0.2)+
+geom_errorbar(aes(x=Year, ymin=lcl,ymax=ucl,col=col), width=.1) +
 
 ## remove the legend
 theme(legend.position="none")+
-guides(fill=FALSE)+
+guides(scale="none",fill=FALSE)+
 theme(legend.title = element_blank())+
 theme(legend.text = element_blank())+
 
@@ -690,37 +714,31 @@ ggsave("Montserrat_ForestBird_Trends_2024.pdf", width=13, height=16)
 ######################################################################################
 
 
-surveys2023<-obsCov %>% filter(year==2023)
-birds2023<-birds %>% filter(Year==2023) %>% rename(N=SumOfNumber1) %>% mutate(Point=as.integer(as.character(Point))) %>% filter(!Species %in% c('UNK','NA'))
-summary2023<-surveys2023 %>% select(Year, Point, Count, Date) %>%
-  left_join(birds2023, by=c('Year','Point','Count')) %>%
+surveys2024<-obsCov %>% filter(year==2024)
+birds2024<-countdata %>% filter(year==2024) %>% select(-Time,-Rain,-Wind,-day,-time,-activity,-Date,-Time,-VisitID) %>%
+	gather(key=Species, value=N, -year,-Point,-Count) %>%
+	mutate(Point=as.integer(as.character(Point)))
+summary2024<-surveys2024 %>% select(year, Point, Count, Date) %>%
+  left_join(birds2024, by=c('year','Point','Count')) %>%
   group_by(Count, Species) %>%
   summarise(N=sum(N, na.rm=T))
 
-totals2023<-summary2023 %>% group_by(Count) %>%
+totals2024<-summary2024 %>% group_by(Count) %>%
   summarise(N=sum(N), n_spec=length(unique(Species)))
 
-table1<-summary2023 %>% spread(key=Count, value=N, fill = 0) %>%
+table1<-summary2024 %>% spread(key=Count, value=N, fill = 0) %>%
   filter(!is.na(Species)) %>%
   mutate(Species=species$Species[match(Species,species$SpeciesCode)]) %>%
   arrange(desc(`1`))
 
-fullnames<-c("Montserrat Oriole", "Forest Thrush", "Bridled Quail-Dove", "Brown Trembler",
-             "Antillean Crested Hummingbird","Purple-throated Carib",
-             "Pearly-eyed Thrasher","Green-throated Carib","Scaly-breasted Thrasher","Scaly-naped Pigeon",
-             "Caribbean Elaenia","Bananaquit")
-# summary<-COUNTDATA %>% group_by(Species,Year) %>%
-#   summarise(mean=mean(N, na.rm=T), sd=sd(N, na.rm=T)) %>%
-#   filter(Year!=2020) %>% ### no counts were done in 2020
-#   mutate(Species=fullnames[match(Species,SPECIES)])
-# summary
-
-
 table2<-trendout %>%
-  mutate(dir=ifelse(lower95CI<0,ifelse(upper95CI<0,"decrease","stable"),ifelse(upper95CI>0,"increase","stable"))) %>%
+  mutate(dir=ifelse(lcl<0,ifelse(ucl<0,"decrease","stable"),ifelse(ucl>0,"increase","stable"))) %>%
   mutate(dir=ifelse(species=="CAEL","(decrease)",dir)) %>%
-  mutate(conf=paste(trend," (",lower95CI," - ",upper95CI,")", sep="")) %>%
-    select(fullspec,dir,conf,pval)
+  mutate(conf=paste(round(mean,3)," (",round(lcl,3)," - ",round(ucl,3),")", sep="")) %>%
+  select(fullspec,dir,conf,BayesP,Rhat) %>%
+	arrange(desc(BayesP))
+
+
 
 ######################################################################################
 #############  SIMPLE plot for the key species     ########################
