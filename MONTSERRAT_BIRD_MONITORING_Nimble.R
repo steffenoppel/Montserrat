@@ -450,21 +450,13 @@ for (y in 2011:YEAR){
   BIRD.y[,,yc]<-as.matrix(x[,2:4])
   
   x<-bird_s %>%
-    mutate(N=ifelse(is.na(N),median(bird_s$N, na.rm=T),NA)) %>%   ### fill in missing values
-    dplyr::filter(year==y) %>%
-    dplyr::select(Point, Count, N) %>%
-    tidyr::spread(key=Count, value=N) %>%
-    dplyr::arrange(Point)
-  inits.y[,,yc]<-as.matrix(x[,2:4])
-  
-  x<-bird_s %>%
     mutate(N=ifelse(is.na(N),median(bird_s$N, na.rm=T),N)) %>%   ### fill in missing values
     dplyr::filter(year==y) %>%
     dplyr::select(Point, Count, N) %>%
     tidyr::spread(key=Count, value=N) %>%
     dplyr::arrange(Point)
-  inits.new[,,yc]<-as.matrix(x[,2:4])
-  
+  inits.y[,,yc]<-as.matrix(x[,2:4])
+  inits.new[,,yc]<-as.matrix(x[,2:4]) 
 }
 
 #### GET THE MAXIMUM COUNT PER POINT PER YEAR FOR INITIAL VALUES
@@ -534,8 +526,8 @@ saveRDS(TRENDMOD,sprintf("output/%s_trend_model_nimble.rds",s))
 MCMCout<-as_tibble(rbind(TRENDMOD$samples[[1]],TRENDMOD$samples[[2]],TRENDMOD$samples[[3]]))
 
 ### PLOT AND SAVE GoF PLOT
-ylow<-round((min(MCMCout$fit)-50)/1000,1)*1000
-yup<-round((max(MCMCout$fit)+50)/1000,1)*1000
+ylow<-round((min(MCMCout$fit, na.rm=T)-50)/1000,1)*1000
+yup<-round((max(MCMCout$fit, na.rm=T)+50)/1000,1)*1000
 pdf(sprintf("output/%s_trendmodel_fit2024.pdf",s), width=10, height=10, title="")
 plot(MCMCout$fit, MCMCout$fit.new, main = "", xlab = "Discrepancy actual data", ylab = "Discrepancy replicate data", frame.plot = FALSE, xlim = c(ylow, yup), ylim = c(ylow, yup))
 abline(0, 1, lwd = 2, col = "black")
