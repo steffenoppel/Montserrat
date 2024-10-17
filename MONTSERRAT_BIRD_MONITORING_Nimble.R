@@ -164,17 +164,18 @@ trend.model<-nimbleCode({
   
   ####  Priors ########
   loglam~dunif(-5,5)          ##  mean abundance prior
-  trend~dunif(-5,5)         ##  trend prior
-  beta.elev~dunif(-2,2)
+  trend~dunif(-10,10)         ##  trend prior
+  beta.elev~dunif(-5,5)
   #beta.rain~dunif(-2,2)
-  beta.canopy~dunif(-2,2)
-  beta.treeheight~dunif(-2,2)
-  bwind~dunif(-2,0)   ## wind can only have negative effect on detection
-  brain~dunif(-2,0)   ## rain can only have negative effect on detection
-  btime~dunif(-2,2)
-  bday~dunif(-2,2)
-  bridge~dunif(-2,2)
-  bact~dunif(-2,2)
+  beta.canopy~dunif(-5,5)
+  beta.treeheight~dunif(-5,5)
+  bwind~dunif(-5,5)   ## wind can only have negative effect on detection
+  brain~dunif(-5,5)   ## rain can only have negative effect on detection
+  btime~dunif(-5,5)
+  b2time~dunif(-5,5)
+  bday~dunif(-5,5)
+  bridge~dunif(-5,5)
+  bact~dunif(-5,5)
   
   ## SITE RANDOM EFFECT ##
   for(i in 1:nsite){
@@ -190,9 +191,9 @@ trend.model<-nimbleCode({
     lam.year[year]~dnorm(trend*primocc[year],tau=tau.year)    ## year-specific random effect with hierarchical centering from Kery email 5 June 2018
   }
   tau.lp<-1/(sigma.p*sigma.p)
-  sigma.p~dunif(0,2)
+  sigma.p~dunif(0,10)
   tau.year<-1/(sigma.year*sigma.year)
-  sigma.year~dunif(0,2)
+  sigma.year~dunif(0,10)
   
   
   ######### State and observation models ##############
@@ -212,6 +213,7 @@ trend.model<-nimbleCode({
         lp[i,t,year] ~ dnorm(mu.lp[i,t,year], tau=tau.lp)
         mu.lp[i,t,year]<-logitp0[year] +
           btime*time[i,t,year]+
+          b2time * pow(time[i,t,year], 2) +
           bday*day[i,t,year]+
           bridge*ridge[i]+
           bwind*wind[i,t,year]+
@@ -309,6 +311,7 @@ inits.trend <- list(#N = Nst,
                     brain=-1,
                     bridge=-1,
                     btime=-1,
+                    b2time=-1,
                     bday=1,
                     bact=2,
                     p0 = runif(nyears,0.1,0.9))
@@ -411,7 +414,7 @@ registerDoParallel(cl)
 Result <- foreach(s=SPECIES, .packages=c('nimble',"tidyverse","MCMCvis","tidyverse","dplyr","data.table")) %dopar% {		#.combine = rbind,
 
 # for (s in SPECIES){
-# #s="MTOR"
+# s="MTOR"
 
 ######################################################################################
 #############  TAKE SUBSET OF DATA FOR FOCAL SPECIES AND SORT THE TABLES    ###################

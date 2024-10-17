@@ -133,13 +133,13 @@ dim(ACT)
 ACT %>% filter(is.na(activity))
 
 # first, check for duplicate entries in the data base bird count data for each species - here we will only care for all data between 2011 and the most recent year and SPECIES
-birds %>% 
-  filter(VisitID %in% obsCov$VisitID, Species %in% SPECIES) %>% # remove all observations from before 2011 which were done with another sampling scheme
-  group_by(VisitID, Species) %>%
-  summarise(n=length(Number)) %>%
-  filter(n>1) %>%
-  filter(!is.na(VisitID)) %>%
-  ungroup()
+# birds %>% 
+#   filter(VisitID %in% obsCov$VisitID, Species %in% SPECIES) %>% # remove all observations from before 2011 which were done with another sampling scheme
+#   group_by(VisitID, Species) %>%
+#   summarise(n=length(Number)) %>%
+#   filter(n>1) %>%
+#   filter(!is.na(VisitID)) %>%
+#   ungroup()
 # okay, there are several duplicates to deal with - NEED TO BE SUMMED UP DUE TO HISTORIC DATA ENTRY (distance sampling)
 
 # sum the numbers up, because a distance sampling framework was applied until 2011 and the duplicate entries refer to different distance bands, for all other cases: we cant solve it so we treat them the same 
