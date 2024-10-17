@@ -121,9 +121,24 @@ summary(umf)
 ###### 4.1: build global model and conduct MacKenzie-Bailey-Goodness-of-Fit Test ####
 
 # built global model and perform gof
-global_model <- colext(~alt:treeheight+dbh, ~year+alt, ~year+alt, ~day+time+rain+wind+activity+location, data = umf, se = T) # global model which is a year corrected shift model
+global_model <- colext(~alt:treeheight+dbh, ~year+alt, ~year+alt, ~day+time+I(time^2)+rain+wind+activity+location, data = umf, se = T) # global model which is a year corrected shift model
 gof <- mb.gof.test(global_model, nsim = 100, parallel = T) # perform gof with 1000 sim
 # saveRDS(best_model_gof, file = sprintf('output/data/GOF/%s_gof_mb.rds', SPECIES)) # save gof as RDS
+
+fitstats <- function(global_model) {
+  observed <- getY(global_model@data)
+  expected <- fitted(global_model)
+  resids <- residuals(global_model)
+  sse <- sum(resids^2,na.rm=TRUE)
+  chisq <- sum((observed - expected)^2 / expected,na.rm=TRUE)
+  freeTuke <- sum((sqrt(observed) - sqrt(expected))^2,na.rm=TRUE)
+  out <- c(SSE=sse, Chisq=chisq, freemanTukey=freeTuke)
+  return(out)
+}
+
+pb <- parboot(global_model, fitstats, nsim=20, report=1)  ### increase nsim
+pb
+
 
 # check gof
 print(gof)
@@ -135,13 +150,14 @@ p_value = gof$p.value # save p_value for modsel table
 # fit models for detection probability p() manually, go on with fitList(), modSel()
 fm1 <- colext(~1, ~1, ~1, ~1, data = umf, se = T)
 fm2 <- colext(~1, ~1, ~1, ~day, data = umf, se = T)
-fm3 <- colext(~1, ~1, ~1, ~day+time, data = umf, se = T)
-fm4 <- colext(~1, ~1, ~1, ~day+time+rain, data = umf, se = T)
+fm3 <- colext(~1, ~1, ~1, ~day+time+I(time^2), data = umf, se = T)
+fm4 <- colext(~1, ~1, ~1, ~day+time+I(time^2)+rain, data = umf, se = T)
 fm5 <- colext(~1, ~1, ~1, ~day+time+rain+wind, data = umf, se = T)
-fm6 <- colext(~1, ~1, ~1, ~day+time+rain+wind+activity, data = umf, se = T)
-fm7 <- colext(~1, ~1, ~1, ~day+time+rain+wind+activity+location, data = umf, se = T)
+fm6 <- colext(~1, ~1, ~1, ~day+time+I(time^2)+rain+wind+activity, data = umf, se = T)
+fm6b <- colext(~1, ~1, ~1, ~day+time+rain+wind+activity, data = umf, se = T)
+fm7 <- colext(~1, ~1, ~1, ~day+time+I(time^2)+rain+wind+activity+location, data = umf, se = T)
 
-p_fitList <- list(fm1, fm2, fm3, fm4, fm5, fm6, fm7)
+p_fitList <- list(fm1, fm2, fm3, fm4, fm5, fm6, fm7, fm6b)
 names(p_fitList) <- lapply(p_fitList, function(x) formula(x)) # set formulas as model names 
 (p_modSel_df <- aictab(cand.set = p_fitList, c.hat = c_hat) %>% # create a model comparison table with QAICc
   mutate(step = 'p'))
