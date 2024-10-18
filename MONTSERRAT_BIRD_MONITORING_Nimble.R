@@ -83,6 +83,7 @@ siteCov<-siteCov %>% arrange(Point) %>%
 ###############################################################################
 SURVEYDATA<-countdata %>%
   arrange(Point,year,Count) %>%
+  mutate(activity=ifelse(is.na(activity),mean(activity, na.rm=T),activity)) %>%
   mutate(time=scale(time),day=scale(day),activity=scale(activity))
 
 ### only needs standardisation if measured in mm, not as 0/1 variable
@@ -423,7 +424,7 @@ Result <- foreach(s=SPECIES, .packages=c('nimble',"tidyverse","MCMCvis","tidyver
 bird_s<-SURVEYDATA[,c(1,2,3,4,match(s,colnames(SURVEYDATA)))] %>%
   arrange(Point,year,Count) %>%
   rename(N=5) %>%
-  mutate(N=if_else(is.na(VisitID),NA,N)) %>%  ### RE-INTRODUCE THE NAs for COUNTS THAT DID NOT TAKE PLACE #####
+  #mutate(N=if_else(is.na(VisitID),NA,N)) %>%  ### RE-INTRODUCE THE NAs for COUNTS THAT DID NOT TAKE PLACE #####
   dplyr::select(Point,year,Count,N)
 
 
