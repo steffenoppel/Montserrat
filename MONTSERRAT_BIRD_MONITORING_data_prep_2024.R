@@ -23,7 +23,7 @@ removal<-c(99,76)																			## removes only two points that cause error 
 
 # set working directory
 getwd()
-setwd('C:/Users/filib/Documents/Praktika/Sempach/Montserrat') # for Filibert
+#setwd('C:/Users/filib/Documents/Praktika/Sempach/Montserrat') # for Filibert
 setwd('C:/STEFFEN/OneDrive - THE ROYAL SOCIETY FOR THE PROTECTION OF BIRDS/STEFFEN/RSPB/UKOT/Montserrat/Analysis/Population_status_assessment/AnnualMonitoring/Montserrat') # for Steffen
 
 
@@ -40,7 +40,7 @@ species <- sqlFetch(db, 'lkSpecies')
 odbcClose(db)
 
 save.image("data/Montserrat_Birds_2024_accdb.RData")
-load("data/Montserrat_Birds_2024_accdb.RData")
+#load("data/Montserrat_Birds_2024_accdb.RData")
 
 #### 3: prepare siteCovs ####
 
@@ -143,14 +143,13 @@ ACT %>% filter(is.na(activity))
 # okay, there are several duplicates to deal with - NEED TO BE SUMMED UP DUE TO HISTORIC DATA ENTRY (distance sampling)
 
 # sum the numbers up, because a distance sampling framework was applied until 2011 and the duplicate entries refer to different distance bands, for all other cases: we cant solve it so we treat them the same 
-birds <- birds %>%
+## create a matrix with 0 counts
+birdmat <- birds %>%
   filter(VisitID %in% obsCov$VisitID, Species %in% SPECIES) %>% # remove all observations from before 2011 which were done with another sampling scheme
   group_by(VisitID, Species) %>%
-  summarise(Number = sum(Number)) %>%
-  filter(!is.na(VisitID)) %>% ungroup()
-
-## create a matrix with 0 counts
-birdmat<-birds %>% spread(key=Species, value=Number, fill=0)
+  summarise(Number = sum(Number)) %>% filter(!is.na(VisitID)) %>% 
+  ungroup() %>%
+  spread(key=Species, value=Number, fill=0)
 
 # create df where for each species obsCov are prepared to fill in birddata using a join
 # obsCov_spec <- bind_rows(replicate(length(SPECIES), obsCov, simplify = FALSE)) %>%
@@ -172,6 +171,9 @@ countdata<-obsCov %>%
 dim(countdata)
 dim(obsCov)
 
+
+
+
 # calculate the theoretically number of observations that should have been done since 2011 at the selected points
 length(siteCov$Point)*3*length(2011:YEAR)
 
@@ -192,6 +194,11 @@ obsCov %>% group_by(year, Point) %>% summarise(number_counts = length(Count)) %>
 head(countdata)
 nrow(countdata) == length(siteCov$Point)*3*length(2011:YEAR)# should be TRUE
 unique(countdata$Species) # should contain all Species you want to study
+
+countdata %>% filter(is.na(VisitID))
+
+
+
 
 #### 6: save workspace for analysis #### 
 
