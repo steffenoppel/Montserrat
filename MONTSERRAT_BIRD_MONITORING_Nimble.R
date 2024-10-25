@@ -164,54 +164,58 @@ trend.model<-nimbleCode({
   
   
   ####  Priors ########
-  loglam~dunif(-5,5)          ##  mean abundance prior
+  loglam.site~dunif(-1,1)          ##  mean abundance prior for site random effect
+  loglam.int~dunif(-1,1)          ##  mean abundance prior for intercept
+  logitp.int~dunif(-1.5,1.5)          ##  mean abundance prior for intercept
   trend~dunif(-5,5)         ##  trend prior
-  beta.elev~dunif(-5,5)
+  beta.elev~dunif(-2,2)
   #beta.rain~dunif(-2,2)
-  beta.canopy~dunif(-5,5)
-  beta.treeheight~dunif(-5,5)
-  bwind~dunif(-5,0)   ## wind can only have negative effect on detection
-  brain~dunif(-5,0)   ## rain can only have negative effect on detection
-  btime~dunif(-5,5)
-  b2time~dunif(-5,5)
-  bday~dunif(-5,5)
-  bridge~dunif(-5,5)
-  bact~dunif(-5,5)
+  beta.canopy~dunif(-2,2)
+  beta.treeheight~dunif(-2,2)
+  bwind~dunif(-2,2)   ## wind can only have negative effect on detection
+  brain~dunif(-2,2)   ## rain can only have negative effect on detection
+  btime~dunif(-2,2)
+  b2time~dunif(-2,2)
+  bday~dunif(-2,2)
+  bridge~dunif(-2,2)
+  bact~dunif(-2,2)
   
   ## SITE RANDOM EFFECT ##
   for(i in 1:nsite){
-    lam.site[i]~dnorm(loglam,tau=tau.site)    ## site-specific random effect with hierarchical centering from Kery email 5 June 2018
+    lam.site[i]~dnorm(loglam.site,tau=tau.site)    ## site-specific random effect with hierarchical centering from Kery email 5 June 2018
   }
   tau.site<-1/(sigma.site*sigma.site)
-  sigma.site~dunif(0,2)
+  sigma.site~dunif(0,1)
   
-  ## YEAR RANDOM EFFECT FOR ABUNDANCE AND ANNUALLY VARYING DETECTION PROBABILITY ##
+  ## YEAR RANDOM EFFECT FOR ANNUALLY VARYING DETECTION PROBABILITY ##
   for(year in 1:nyear){
-    p0[year]~dunif(0.01,0.99)## detection probability
-    logitp0[year]<-log(p0[year]/(1-p0[year]))
+    p0[year]~dunif(0.1,0.9)## detection probability
+    ranef.year[year]<-log(p0[year]/(1-p0[year]))
     #lam.year[year]~dnorm(trend*primocc[year],tau=tau.year)    ## year-specific random effect with hierarchical centering from Kery email 5 June 2018
-    lam.year[year]~dnorm(loglam,tau=tau.year)    ## year-specific random effect with hierarchical centering from Kery email 5 June 2018
+    lam.year[year]~dnorm(loglam.int,tau=tau.year)    ## year-specific random effect with hierarchical centering from Kery email 5 June 2018
   }
   tau.year<-1/(sigma.year*sigma.year)
-  sigma.year~dunif(0,2)
+  sigma.year~dunif(0,1)
   
   
   ######### State and observation models ##############
   for(year in 1:nyear){
     for(i in 1:nsite){
-      log(lambda[i,year])<- lam.year[year]+
+      log(lambda[i,year])<- loglam.int+
         trend*primocc[year]+
         beta.elev*elev[i]+
         beta.treeheight*treeheight[i]+
         beta.canopy*canopy[i]+
-        lam.site[i]
+        lam.site[i]+
+	  lam.year[year]
       N[i,year]~dpois(lambda[i,year])
       
       for(t in 1:nrep){
         M[i,t,year]~dbin(p[i,t,year],N[i,year])
         #p[i,t,year] <- exp(lp[i,t,year])/(1+exp(lp[i,t,year]))
         #lp[i,t,year] ~ dnorm(mu.lp[i,t,year], tau=tau.lp)
-        logit(p[i,t,year])<-logitp0[year] +
+        logit(p[i,t,year])<-logitp.int +
+	    ranef.year[year] +
           btime*time[i,t,year]+
           b2time * pow(time[i,t,year], 2) +
           bday*day[i,t,year]+
@@ -299,14 +303,16 @@ trend.constants <- list(nsite=nsites,
 
 inits.trend <- list(#N = Nst,
                     trend=runif(1,-2,2),
-                    loglam = runif(1,-2,2),
-                    sigma.site = runif(1,0,2),
-                    sigma.year=runif(1,0,2),
+                    loglam.site = runif(1,-1,1),
+                    loglam.int = runif(1,-1,1),
+                    logitp.int = runif(1,-1,1),
+                    sigma.site = runif(1,0,1),
+                    sigma.year=runif(1,0,1),
                     #sigma.p=runif(1,0,2),
-                    beta.canopy=runif(1,-2,2),
-                    #beta.rain=runif(1,-2,2),
-                    beta.treeheight=runif(1,-2,2),
-                    beta.elev=runif(1,-2,2),
+                    beta.canopy=runif(1,-1,1),
+                    #beta.rain=runif(1,-1,1),
+                    beta.treeheight=runif(1,-1,1),
+                    beta.elev=runif(1,-1,1),
                     bwind=-1,
                     brain=-1,
                     bridge=-1,
@@ -314,9 +320,9 @@ inits.trend <- list(#N = Nst,
                     b2time=-1,
                     bday=1,
                     bact=2,
-                    p0 = runif(nyears,0.1,0.9))
-inits.trend$lam.site<-rnorm(nsites,inits.trend$loglam,inits.trend$sigma.site)
-inits.trend$lam.year<-rnorm(nyears,inits.trend$loglam,inits.trend$sigma.year)
+                    p0 = runif(nyears,0.2,0.8))
+inits.trend$lam.site<-rnorm(nsites,inits.trend$loglam.site,inits.trend$sigma.site)
+inits.trend$lam.year<-rnorm(nyears,inits.trend$loglam.int,inits.trend$sigma.year)
 
 
 
