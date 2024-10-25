@@ -165,13 +165,13 @@ trend.model<-nimbleCode({
   
   ####  Priors ########
   loglam~dunif(-5,5)          ##  mean abundance prior
-  trend~dunif(-10,10)         ##  trend prior
+  trend~dunif(-5,5)         ##  trend prior
   beta.elev~dunif(-5,5)
   #beta.rain~dunif(-2,2)
   beta.canopy~dunif(-5,5)
   beta.treeheight~dunif(-5,5)
-  bwind~dunif(-5,5)   ## wind can only have negative effect on detection
-  brain~dunif(-5,5)   ## rain can only have negative effect on detection
+  bwind~dunif(-5,0)   ## wind can only have negative effect on detection
+  brain~dunif(-5,0)   ## rain can only have negative effect on detection
   btime~dunif(-5,5)
   b2time~dunif(-5,5)
   bday~dunif(-5,5)
@@ -189,19 +189,18 @@ trend.model<-nimbleCode({
   for(year in 1:nyear){
     p0[year]~dunif(0.01,0.99)## detection probability
     logitp0[year]<-log(p0[year]/(1-p0[year]))
-    lam.year[year]~dnorm(trend*primocc[year],tau=tau.year)    ## year-specific random effect with hierarchical centering from Kery email 5 June 2018
+    #lam.year[year]~dnorm(trend*primocc[year],tau=tau.year)    ## year-specific random effect with hierarchical centering from Kery email 5 June 2018
+    lam.year[year]~dnorm(loglam,tau=tau.year)    ## year-specific random effect with hierarchical centering from Kery email 5 June 2018
   }
-  tau.lp<-1/(sigma.p*sigma.p)
-  sigma.p~dunif(0,10)
   tau.year<-1/(sigma.year*sigma.year)
-  sigma.year~dunif(0,10)
+  sigma.year~dunif(0,2)
   
   
   ######### State and observation models ##############
   for(year in 1:nyear){
     for(i in 1:nsite){
       log(lambda[i,year])<- lam.year[year]+
-        #beta.rain*rain[year]+
+        trend*primocc[year]+
         beta.elev*elev[i]+
         beta.treeheight*treeheight[i]+
         beta.canopy*canopy[i]+
@@ -210,9 +209,9 @@ trend.model<-nimbleCode({
       
       for(t in 1:nrep){
         M[i,t,year]~dbin(p[i,t,year],N[i,year])
-        p[i,t,year] <- exp(lp[i,t,year])/(1+exp(lp[i,t,year]))
-        lp[i,t,year] ~ dnorm(mu.lp[i,t,year], tau=tau.lp)
-        mu.lp[i,t,year]<-logitp0[year] +
+        #p[i,t,year] <- exp(lp[i,t,year])/(1+exp(lp[i,t,year]))
+        #lp[i,t,year] ~ dnorm(mu.lp[i,t,year], tau=tau.lp)
+        logit(p[i,t,year])<-logitp0[year] +
           btime*time[i,t,year]+
           b2time * pow(time[i,t,year], 2) +
           bday*day[i,t,year]+
@@ -303,7 +302,7 @@ inits.trend <- list(#N = Nst,
                     loglam = runif(1,-2,2),
                     sigma.site = runif(1,0,2),
                     sigma.year=runif(1,0,2),
-                    sigma.p=runif(1,0,2),
+                    #sigma.p=runif(1,0,2),
                     beta.canopy=runif(1,-2,2),
                     #beta.rain=runif(1,-2,2),
                     beta.treeheight=runif(1,-2,2),
@@ -317,7 +316,7 @@ inits.trend <- list(#N = Nst,
                     bact=2,
                     p0 = runif(nyears,0.1,0.9))
 inits.trend$lam.site<-rnorm(nsites,inits.trend$loglam,inits.trend$sigma.site)
-inits.trend$lam.year<-rnorm(nyears,(inits.trend$trend*seq(1:(nyears))),inits.trend$sigma.year)
+inits.trend$lam.year<-rnorm(nyears,inits.trend$loglam,inits.trend$sigma.year)
 
 
 
@@ -331,8 +330,8 @@ parameters.trend <- c("fit", "fit.new","trend","totalN","anndet")  #
 
 # MCMC settings
 # number of posterior samples per chain is n.iter - n.burnin
-n.iter <- 500000
-n.burnin <- 250000
+n.iter <- 5000
+n.burnin <- 2500
 n.chains <- 3
 
 
@@ -362,8 +361,10 @@ test <- nimbleModel(code = trend.model,
                     calculate=TRUE)
 
 # USE TEST VALUES TO SUPPLEMENT INITS
-inits.trend$lp = array(rnorm(trend.constants$nsite*trend.constants$nrep*trend.constants$nyear, c(test$mu.lp), inits.trend$sigma.p),
-                       dim= c(trend.constants$nsite, trend.constants$nrep,trend.constants$nyear))  
+# inits.trend$lp = array(rnorm(trend.constants$nsite*trend.constants$nrep*trend.constants$nyear, c(test$mu.lp), inits.trend$sigma.p),
+#                        dim= c(trend.constants$nsite, trend.constants$nrep,trend.constants$nyear)) 
+inits.trend$p = array(runif(trend.constants$nsite*trend.constants$nrep*trend.constants$nyear, 0.3,0.7),
+                       dim= c(trend.constants$nsite, trend.constants$nrep,trend.constants$nyear)) 
 test$calculate()
 # inits.trend$p0
 
@@ -486,8 +487,10 @@ trend.data <- list(M = BIRD.y)
 ####   ADD INITIAL VALUES----     ################################
 ## MUST ADD Nst TO INITIAL VALUESBE FOR ALL PARAMETERS
 ## NIMBLE CAN HAVE CONVERGENCE PROBLEMS IF DIFFERENT INITS ARE SPECIFIED: https://groups.google.com/g/nimble-users/c/dgx9ajOniG8
-inits.trend$lp = array(rnorm(trend.constants$nsite*trend.constants$nrep*trend.constants$nyear, c(test$mu.lp), inits.trend$sigma.p),
-                       dim= c(trend.constants$nsite, trend.constants$nrep,trend.constants$nyear))
+# inits.trend$lp = array(rnorm(trend.constants$nsite*trend.constants$nrep*trend.constants$nyear, c(test$mu.lp), inits.trend$sigma.p),
+#                        dim= c(trend.constants$nsite, trend.constants$nrep,trend.constants$nyear))
+inits.trend$p = array(runif(trend.constants$nsite*trend.constants$nrep*trend.constants$nyear, 0.3,0.7),
+                      dim= c(trend.constants$nsite, trend.constants$nrep,trend.constants$nyear)) 
 inits.trend$N = Nst
 inits.trend$M = inits.y
 inits.trend$M.new = inits.new
