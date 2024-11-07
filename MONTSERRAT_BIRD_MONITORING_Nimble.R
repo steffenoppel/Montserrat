@@ -164,50 +164,53 @@ trend.model<-nimbleCode({
   
   
   ####  Priors ########
-  loglam.site~dunif(-1,1)          ##  mean abundance prior for site random effect
-  loglam.int~dunif(-1,1)          ##  mean abundance prior for intercept
-  logitp.int~dunif(-1.5,1.5)          ##  mean abundance prior for intercept
-  trend~dunif(-5,5)         ##  trend prior
-  beta.elev~dunif(-2,2)
-  #beta.rain~dunif(-2,2)
-  beta.canopy~dunif(-2,2)
-  beta.treeheight~dunif(-2,2)
-  bwind~dunif(-2,2)   ## wind can only have negative effect on detection
-  brain~dunif(-2,2)   ## rain can only have negative effect on detection
-  btime~dunif(-2,2)
-  b2time~dunif(-2,2)
-  bday~dunif(-2,2)
-  bridge~dunif(-2,2)
-  bact~dunif(-2,2)
+  #loglam.site~dnorm(0,sd=1)          ##  mean abundance prior for site random effect
+  loglam.int~dnorm(0,sd=1)          ##  mean abundance prior for intercept
+  logitp.int~dnorm(0,sd=1.5)          ##  mean abundance prior for intercept
+  trend~dnorm(0,sd=2)         ##  trend prior
+  trend2~dnorm(0,sd=2)        ##  quadratic trend prior
+  beta.elev~dnorm(0,sd=2)
+  #beta.rain~dnorm(0,sd=2)
+  beta.canopy~dnorm(0,sd=2)
+  beta.treeheight~dnorm(0,sd=2)
+  bwind~dnorm(-1,sd=2)   ## wind can only have negative effect on detection
+  brain~dnorm(-1,sd=2)   ## rain can only have negative effect on detection
+  btime~dnorm(0,sd=2)
+  b2time~dnorm(0,sd=2)
+  bday~dnorm(0,sd=2)
+  bridge~dnorm(0,sd=2)
+  bact~dnorm(0,sd=2)
   
   ## SITE RANDOM EFFECT ##
   for(i in 1:nsite){
-    lam.site[i]~dnorm(loglam.site,tau=tau.site)    ## site-specific random effect with hierarchical centering from Kery email 5 June 2018
+    lam.site[i]~dnorm(0,sd=1)    ## site-specific random effect with hierarchical centering from Kery email 5 June 2018
   }
-  tau.site<-1/(sigma.site*sigma.site)
-  sigma.site~dunif(0,1)
+  #tau.site<-1/(sigma.site*sigma.site)
+  #sigma.site~dt(0,1,2)I(0,)
+  sigma.site~T(dt(0,1,2), 0, 10)
   
   ## YEAR RANDOM EFFECT FOR ANNUALLY VARYING DETECTION PROBABILITY ##
   for(year in 1:nyear){
-    p0[year]~dunif(0.1,0.9)## detection probability
-    ranef.year[year]<-log(p0[year]/(1-p0[year]))
+    logit.p0[year]~dnorm(0,sd=1)## detection probability
+    #ranef.year[year]<-log(p0[year]/(1-p0[year]))
     #lam.year[year]~dnorm(trend*primocc[year],tau=tau.year)    ## year-specific random effect with hierarchical centering from Kery email 5 June 2018
-    lam.year[year]~dnorm(loglam.int,tau=tau.year)    ## year-specific random effect with hierarchical centering from Kery email 5 June 2018
+    lam.year[year]~dnorm(0,sd=1)    ## year-specific random effect with hierarchical centering from Kery email 5 June 2018
   }
-  tau.year<-1/(sigma.year*sigma.year)
-  sigma.year~dunif(0,1)
-  
+  #tau.year<-1/(sigma.year*sigma.year)
+  sigma.year~T(dt(0,1,2), 0, 10)
+  sigma.year.p0~T(dt(0,1,2), 0, 10)
   
   ######### State and observation models ##############
   for(year in 1:nyear){
     for(i in 1:nsite){
       log(lambda[i,year])<- loglam.int+
         trend*primocc[year]+
+        trend2*pow(primocc[year],2)+
         beta.elev*elev[i]+
         beta.treeheight*treeheight[i]+
         beta.canopy*canopy[i]+
-        lam.site[i]+
-	  lam.year[year]
+        lam.site[i]*sigma.site+
+	  lam.year[year]*sigma.year
       N[i,year]~dpois(lambda[i,year])
       
       for(t in 1:nrep){
@@ -215,7 +218,7 @@ trend.model<-nimbleCode({
         #p[i,t,year] <- exp(lp[i,t,year])/(1+exp(lp[i,t,year]))
         #lp[i,t,year] ~ dnorm(mu.lp[i,t,year], tau=tau.lp)
         logit(p[i,t,year])<-logitp.int +
-	    ranef.year[year] +
+	    logit.p0[year]*sigma.year.p0 +   ## logit-transformed p0
           btime*time[i,t,year]+
           b2time * pow(time[i,t,year], 2) +
           bday*day[i,t,year]+
@@ -302,27 +305,31 @@ trend.constants <- list(nsite=nsites,
 ## NIMBLE CAN HAVE CONVERGENCE PROBLEMS IF DIFFERENT INITS ARE SPECIFIED: https://groups.google.com/g/nimble-users/c/dgx9ajOniG8
 
 inits.trend <- list(#N = Nst,
-                    trend=runif(1,-2,2),
-                    loglam.site = runif(1,-1,1),
-                    loglam.int = runif(1,-1,1),
-                    logitp.int = runif(1,-1,1),
-                    sigma.site = runif(1,0,1),
-                    sigma.year=runif(1,0,1),
-                    #sigma.p=runif(1,0,2),
-                    beta.canopy=runif(1,-1,1),
+                    trend=rnorm(1,0,1),
+			  trend2=rnorm(1,0,1),
+                    #loglam.site = rnorm(1,0,1),
+                    loglam.int = rnorm(1,0,1),
+                    logitp.int = rnorm(1,0,1),
+			  lam.site = rnorm(1,0,1),
+			  lam.year = rnorm(1,0,1),
+                    sigma.site = 1,
+                    sigma.year=1,
+                    logit.p0 = rnorm(1,0,1),
+                    sigma.year.p0=1,
+                    beta.canopy=rnorm(1,0,1),
                     #beta.rain=runif(1,-1,1),
-                    beta.treeheight=runif(1,-1,1),
-                    beta.elev=runif(1,-1,1),
+                    beta.treeheight=rnorm(1,0,1),
+                    beta.elev=rnorm(1,0,1),
                     bwind=-1,
                     brain=-1,
                     bridge=-1,
                     btime=-1,
                     b2time=-1,
                     bday=1,
-                    bact=2,
-                    p0 = runif(nyears,0.2,0.8))
-inits.trend$lam.site<-rnorm(nsites,inits.trend$loglam.site,inits.trend$sigma.site)
-inits.trend$lam.year<-rnorm(nyears,inits.trend$loglam.int,inits.trend$sigma.year)
+                    bact=2
+)
+#inits.trend$lam.site<-rnorm(nsites,0,inits.trend$sigma.site)
+#inits.trend$lam.year<-rnorm(nyears,0,inits.trend$sigma.year)
 
 
 
@@ -336,8 +343,8 @@ parameters.trend <- c("fit", "fit.new","trend","totalN","anndet")  #
 
 # MCMC settings
 # number of posterior samples per chain is n.iter - n.burnin
-n.iter <- 75000
-n.burnin <- 50000
+n.iter <- 1250
+n.burnin <- 1000
 n.chains <- 3
 
 
@@ -422,7 +429,7 @@ registerDoParallel(cl)
 Result <- foreach(s=SPECIES, .packages=c('nimble',"tidyverse","MCMCvis","tidyverse","dplyr","data.table")) %dopar% {		#.combine = rbind,
 
 # for (s in SPECIES){
-# s="MTOR"
+# s="PETH"
 
 ######################################################################################
 #############  TAKE SUBSET OF DATA FOR FOCAL SPECIES AND SORT THE TABLES    ###################
@@ -432,6 +439,7 @@ bird_s<-SURVEYDATA[,c(1,2,3,4,match(s,colnames(SURVEYDATA)))] %>%
   arrange(Point,year,Count) %>%
   rename(N=5) %>%
   #mutate(N=if_else(is.na(VisitID),NA,N)) %>%  ### RE-INTRODUCE THE NAs for COUNTS THAT DID NOT TAKE PLACE #####
+  mutate(N=if_else(N>12,12,N)) %>%  ### truncate data to no more than 12 individuals (3 per quadrant) to avoid big outliers
   dplyr::select(Point,year,Count,N)
 
 
@@ -501,7 +509,7 @@ inits.trend$N = Nst
 inits.trend$M = inits.y
 inits.trend$M.new = inits.new
 
-allchaininits.trend <- list(inits.trend, inits.trend, inits.trend)
+#allchaininits.trend <- list(inits.trend, inits.trend, inits.trend)
 
 
 
@@ -515,7 +523,7 @@ allchaininits.trend <- list(inits.trend, inits.trend, inits.trend)
 TRENDMOD <- nimbleMCMC(code = trend.model,
                             constants=trend.constants,
                             data = trend.data,
-                            inits = allchaininits.trend,
+                            inits = inits.trend,
                             monitors = parameters.trend,
                             thin=4,
                             niter = n.iter,
