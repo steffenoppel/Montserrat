@@ -164,19 +164,19 @@ trend.model<-nimbleCode({
   
   ####  Priors ########
   loglam.int~dnorm(0,sd=1)          ##  mean abundance prior for intercept
-  logitp.int~dnorm(0,sd=1.5)          ##  mean abundance prior for intercept
-  trend~dnorm(0,sd=2)         ##  trend prior
-  trend2~dnorm(0,sd=2)        ##  quadratic trend prior
-  beta.elev~dnorm(0,sd=2)
-  beta.canopy~dnorm(0,sd=2)
-  beta.treeheight~dnorm(0,sd=2)
-  bwind~dnorm(-1,sd=2)   ## wind can only have negative effect on detection
-  brain~dnorm(-1,sd=2)   ## rain can only have negative effect on detection
-  btime~dnorm(0,sd=2)
-  b2time~dnorm(0,sd=2)
-  bday~dnorm(0,sd=2)
-  bridge~dnorm(0,sd=2)
-  bact~dnorm(0,sd=2)
+  logitp.int~dnorm(0,sd=1)          ##  mean abundance prior for intercept
+  trend~dnorm(0,sd=1)         ##  trend prior
+  trend2~dnorm(0,sd=1)        ##  quadratic trend prior
+  beta.elev~dnorm(0,sd=1)
+  beta.canopy~dnorm(0,sd=1)
+  beta.treeheight~dnorm(0,sd=1)
+  bwind~dnorm(-1,sd=1)   ## wind can only have negative effect on detection
+  brain~dnorm(-1,sd=1)   ## rain can only have negative effect on detection
+  btime~dnorm(0,sd=1)
+  b2time~dnorm(0,sd=1)
+  bday~dnorm(0,sd=1)
+  bridge~dnorm(0,sd=1)
+  bact~dnorm(0,sd=1)
   
   ## SITE RANDOM EFFECT ##
   for(i in 1:nsite){
@@ -203,7 +203,7 @@ trend.model<-nimbleCode({
         beta.canopy*canopy[i]+
         lam.site[i]+
 	  lam.year[year]
-      N[i,year]~T(dpois(lambda[i,year]),0,20) ### truncate N per point and year to a maximum of 20 to avoid ridiculously high values
+      N[i,year]~dpois(lambda[i,year]) ### T(dpois(lambda[i,year]),0,20) truncate N per point and year to a maximum of 20 to avoid ridiculously high values
       
       for(t in 1:nrep){
         M[i,t,year]~dbin(p[i,t,year],N[i,year])
@@ -274,7 +274,8 @@ trend.model<-nimbleCode({
 
 trend.constants <- list(nsite=nsites,
                         nrep=3,
-                        primocc=seq(2011:YEAR),
+                        #primocc=seq(2011:YEAR),
+                        primocc=as.vector(scale(c(2011:YEAR))),
                         nyear=nyears,
                         elev=siteCov$elev,
                         treeheight=siteCov$tree,
@@ -417,7 +418,7 @@ registerDoParallel(cl)
 Result <- foreach(s=SPECIES, .packages=c('nimble',"tidyverse","MCMCvis","tidyverse","dplyr","data.table")) %dopar% {		#.combine = rbind,
 
 # for (s in SPECIES){
-# s="PETH"
+# s="MTOR"
 
 ######################################################################################
 #############  TAKE SUBSET OF DATA FOR FOCAL SPECIES AND SORT THE TABLES    ###################
@@ -532,8 +533,8 @@ saveRDS(TRENDMOD,sprintf("output/%s_trend_model_nimble.rds",s))
 MCMCout<-as_tibble(rbind(TRENDMOD$samples[[1]],TRENDMOD$samples[[2]],TRENDMOD$samples[[3]]))
 
 ### PLOT AND SAVE GoF PLOT
-ylow<-round((min(MCMCout$fit, na.rm=T)-50)/1000,1)*1000
-yup<-round((max(MCMCout$fit, na.rm=T)+50)/1000,1)*1000
+ylow<-round((min(MCMCout$fit,MCMCout$fit.new, na.rm=T)-50)/1000,1)*1000
+yup<-round((max(MCMCout$fit,MCMCout$fit.new, na.rm=T)+50)/1000,1)*1000
 pdf(sprintf("output/%s_trendmodel_fit2024.pdf",s), width=10, height=10, title="")
 plot(MCMCout$fit, MCMCout$fit.new, main = "", xlab = "Discrepancy actual data", ylab = "Discrepancy replicate data", frame.plot = FALSE, xlim = c(ylow, yup), ylim = c(ylow, yup))
 abline(0, 1, lwd = 2, col = "black")
@@ -544,7 +545,7 @@ dev.off()
 # EXAMINE OUTPUT AND DIAGNOSTICS WITH MCMCvis
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-out<- as.data.frame(MCMCsummary(TRENDMOD$samples, params=c("trend","totalN","anndet")))
+out<- as.data.frame(MCMCsummary(TRENDMOD$samples, params=c("trend","trend2","totalN","anndet")))
 out$parameter<-row.names(out)
 out$species<-s
 out$BayesP<-mean(MCMCout$fit > MCMCout$fit.new)
