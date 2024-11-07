@@ -203,7 +203,7 @@ trend.model<-nimbleCode({
         beta.canopy*canopy[i]+
         lam.site[i]+
 	  lam.year[year]
-      N[i,year]~dpois(lambda[i,year])
+      N[i,year]~T(dpois(lambda[i,year]),0,20) ### truncate N per point and year to a maximum of 20 to avoid ridiculously high values
       
       for(t in 1:nrep){
         M[i,t,year]~dbin(p[i,t,year],N[i,year])
@@ -299,11 +299,11 @@ inits.trend <- list(#N = Nst,
 			  trend2=rnorm(1,0,1),
                     loglam.int = rnorm(1,0,1),
                     logitp.int = rnorm(1,0,1),
-			  lam.site = rnorm(1,0,1),
-			  lam.year = rnorm(1,0,1),
+			  lam.site = rnorm(nsites,0,1),
+			  lam.year = rnorm(nyears,0,1),
                     sigma.site = 1,
                     sigma.year=1,
-                    logit.p0 = rnorm(1,0,1),
+                    logit.p0 = rnorm(nyears,0,1),
                     sigma.year.p0=1,
                     beta.canopy=rnorm(1,0,1),
                     beta.treeheight=rnorm(1,0,1),
@@ -331,8 +331,8 @@ parameters.trend <- c("fit", "fit.new","trend","trend2","totalN","anndet")  #
 
 # MCMC settings
 # number of posterior samples per chain is n.iter - n.burnin
-n.iter <- 12500
-n.burnin <- 10000
+n.iter <- 1250
+n.burnin <- 1000
 n.chains <- 3
 
 
