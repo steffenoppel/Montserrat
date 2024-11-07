@@ -162,15 +162,12 @@ for (d in 1:nyears){							### replace missing dates with mean for each survey r
 # Specify model in NIMBLE format
 trend.model<-nimbleCode({
   
-  
   ####  Priors ########
-  #loglam.site~dnorm(0,sd=1)          ##  mean abundance prior for site random effect
   loglam.int~dnorm(0,sd=1)          ##  mean abundance prior for intercept
   logitp.int~dnorm(0,sd=1.5)          ##  mean abundance prior for intercept
   trend~dnorm(0,sd=2)         ##  trend prior
   trend2~dnorm(0,sd=2)        ##  quadratic trend prior
   beta.elev~dnorm(0,sd=2)
-  #beta.rain~dnorm(0,sd=2)
   beta.canopy~dnorm(0,sd=2)
   beta.treeheight~dnorm(0,sd=2)
   bwind~dnorm(-1,sd=2)   ## wind can only have negative effect on detection
@@ -183,20 +180,15 @@ trend.model<-nimbleCode({
   
   ## SITE RANDOM EFFECT ##
   for(i in 1:nsite){
-    lam.site[i]~dnorm(0,sd=1)    ## site-specific random effect with hierarchical centering from Kery email 5 June 2018
+    lam.site[i]~dnorm(0,sd=sigma.site)    ## site-specific random effect
   }
-  #tau.site<-1/(sigma.site*sigma.site)
-  #sigma.site~dt(0,1,2)I(0,)
   sigma.site~T(dt(0,1,2), 0, 10)
   
   ## YEAR RANDOM EFFECT FOR ANNUALLY VARYING DETECTION PROBABILITY ##
   for(year in 1:nyear){
-    logit.p0[year]~dnorm(0,sd=1)## detection probability
-    #ranef.year[year]<-log(p0[year]/(1-p0[year]))
-    #lam.year[year]~dnorm(trend*primocc[year],tau=tau.year)    ## year-specific random effect with hierarchical centering from Kery email 5 June 2018
-    lam.year[year]~dnorm(0,sd=1)    ## year-specific random effect with hierarchical centering from Kery email 5 June 2018
+    logit.p0[year]~dnorm(0,sd=sigma.year.p0)## detection probability
+    lam.year[year]~dnorm(0,sd=sigma.year)    ## year-specific random effect with hierarchical centering from Kery email 5 June 2018
   }
-  #tau.year<-1/(sigma.year*sigma.year)
   sigma.year~T(dt(0,1,2), 0, 10)
   sigma.year.p0~T(dt(0,1,2), 0, 10)
   
@@ -209,16 +201,14 @@ trend.model<-nimbleCode({
         beta.elev*elev[i]+
         beta.treeheight*treeheight[i]+
         beta.canopy*canopy[i]+
-        lam.site[i]*sigma.site+
-	  lam.year[year]*sigma.year
+        lam.site[i]+
+	  lam.year[year]
       N[i,year]~dpois(lambda[i,year])
       
       for(t in 1:nrep){
         M[i,t,year]~dbin(p[i,t,year],N[i,year])
-        #p[i,t,year] <- exp(lp[i,t,year])/(1+exp(lp[i,t,year]))
-        #lp[i,t,year] ~ dnorm(mu.lp[i,t,year], tau=tau.lp)
         logit(p[i,t,year])<-logitp.int +
-	    logit.p0[year]*sigma.year.p0 +   ## logit-transformed p0
+	    logit.p0[year] +   ## random annual detection effect
           btime*time[i,t,year]+
           b2time * pow(time[i,t,year], 2) +
           bday*day[i,t,year]+
@@ -307,7 +297,6 @@ trend.constants <- list(nsite=nsites,
 inits.trend <- list(#N = Nst,
                     trend=rnorm(1,0,1),
 			  trend2=rnorm(1,0,1),
-                    #loglam.site = rnorm(1,0,1),
                     loglam.int = rnorm(1,0,1),
                     logitp.int = rnorm(1,0,1),
 			  lam.site = rnorm(1,0,1),
@@ -317,7 +306,6 @@ inits.trend <- list(#N = Nst,
                     logit.p0 = rnorm(1,0,1),
                     sigma.year.p0=1,
                     beta.canopy=rnorm(1,0,1),
-                    #beta.rain=runif(1,-1,1),
                     beta.treeheight=rnorm(1,0,1),
                     beta.elev=rnorm(1,0,1),
                     bwind=-1,
@@ -338,13 +326,13 @@ inits.trend <- list(#N = Nst,
 ####   DEFINE RUN SETTINGS AND OUTPUT DATA----     ################################
 
 # Define parameters to be monitored
-parameters.trend <- c("fit", "fit.new","trend","totalN","anndet")  #
+parameters.trend <- c("fit", "fit.new","trend","trend2","totalN","anndet")  #
 
 
 # MCMC settings
 # number of posterior samples per chain is n.iter - n.burnin
-n.iter <- 1250
-n.burnin <- 1000
+n.iter <- 12500
+n.burnin <- 10000
 n.chains <- 3
 
 
@@ -439,7 +427,7 @@ bird_s<-SURVEYDATA[,c(1,2,3,4,match(s,colnames(SURVEYDATA)))] %>%
   arrange(Point,year,Count) %>%
   rename(N=5) %>%
   #mutate(N=if_else(is.na(VisitID),NA,N)) %>%  ### RE-INTRODUCE THE NAs for COUNTS THAT DID NOT TAKE PLACE #####
-  mutate(N=if_else(N>12,12,N)) %>%  ### truncate data to no more than 12 individuals (3 per quadrant) to avoid big outliers
+  #mutate(N=if_else(N>12,12,N)) %>%  ### truncate data to no more than 12 individuals (3 per quadrant) to avoid big outliers
   dplyr::select(Point,year,Count,N)
 
 
