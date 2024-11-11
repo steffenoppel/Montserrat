@@ -332,8 +332,8 @@ parameters.trend <- c("fit", "fit.new","trend","trend2","totalN","anndet")  #
 
 # MCMC settings
 # number of posterior samples per chain is n.iter - n.burnin
-n.iter <- 1250
-n.burnin <- 1000
+n.iter <- 150000
+n.burnin <- 100000
 n.chains <- 3
 
 
@@ -641,7 +641,7 @@ annestimates<-tibble()
 trendout<-tibble()
 for (f in allout){
 	x<-fread(f)
-	trendout<-trendout %>% bind_rows(x %>% filter(parameter=="trend"))
+	trendout<-trendout %>% bind_rows(x %>% filter(parameter %in% c("trend","trend2")))
 	annestimates<-annestimates %>% bind_rows(x %>% filter(substr(parameter,1,6)=="totalN"))
 }
 
