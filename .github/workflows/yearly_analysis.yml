@@ -10,6 +10,8 @@ on:
   push: 
     paths: 
       - 'Montserrat/data/**' # triggers a workflow every time a new file is added to the data folder in the repository
+      
+  workflow_dispatch:  # This allows manual triggering of the workflow
  
 jobs: 
   build: # define a job
