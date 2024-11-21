@@ -8,7 +8,7 @@ on:
     - cron: "0 0 1 6 *" # triggers the workflow every year on the first of June at midnight; 0 0  (OO:00 Midnight), 1 (first day of month), 6 (June), * (every year)
 
   push: 
-    path: 
+    paths: 
       - 'Montserrat/data/**' # triggers a workflow every time a new file is added to the data folder in the repository
  
 jobs: 
