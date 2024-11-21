@@ -1,11 +1,8 @@
 name: yearly analysis # name of my workflow 
 
 on: 
-  #push: # this triggers/starts the workflow whenever a push to this repo is performed 
-    #branches: 
-     # - main # only on the main branch 
   schedule: 
-    - cron: "0 0 1 6 *" # triggers the workflow every year on the first of June at midnight; 0 0  (OO:00 Midnight), 1 (first day of month), 6 (June), * (every year)
+    - cron: "0 0 1 6 *" # triggers the workflow every year on the first of June at midnight; 0 0  (00:00 Midnight), 1 (first day of month), 6 (June), * (every year)
 
   push: 
     paths: 
@@ -16,10 +13,7 @@ on:
 jobs: 
   build: # define a job
     runs-on: ubuntu-latest # set Environment for the job, here use Ubuntu as the virtual machine environment 
-    # runs-on: macos-latest # this is where Steffens example runs the workflow
-    # env:
-    #   GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-    #   R_KEEP_PKG_SOURCE: yes
+
     steps: 
       - name: Checkout repository # provide a name for this step within the workflow
         uses: actions/checkout@v3
@@ -33,22 +27,18 @@ jobs:
         uses: r-lib/actions/setup-r@v2
 
       - name: Install R dependencies 
-        run: | # this initialises to run a certain function within R, here to set up the full environment and install all needed packages 
-          Rscript -e 'install.packages(c("ggplot2","rmarkdown","knitr","remotes","tidyverse","data.table","lubridate","grid","gtable", "reticulate", "splitstackshape", "RODBC", # these packages are for the data preparation
-            "dtplyr", "ggplot2", "MCMCvis", "nimble", "basicMCMCplots", "parallel", "foreach", "doParallel"))' # these packages are for the analysis with N-mixture models in NIMBLE
-          
-          Rscript -e 'filter <- dplyr::filter; select <- dplyr::select; rename <- dplyr::rename' # prevent any conflicts with these commonly used functions 
+        run: | 
+          Rscript -e 'install.packages(c(
+            "ggplot2", "rmarkdown", "knitr", "remotes", "tidyverse", "data.table", 
+            "lubridate", "grid", "gtable", "reticulate", "splitstackshape", "RODBC",
+            "dtplyr", "ggplot2", "MCMCvis", "nimble", "basicMCMCplots", "parallel", 
+            "foreach", "doParallel"
+          ))' 
+
+          Rscript -e 'filter <- dplyr::filter; select <- dplyr::select; rename <- dplyr::rename'
 
       - name: List Installed Packages
-          run: Rscript -e 'installed.packages()[, "Package"]'
-
-        # shell: Rscript {0} # this command can be used to set the Rscript globally for this run; is redundant here because I used Rscript command already before each line of code
+        run: Rscript -e 'installed.packages()[, "Package"]'
 
       - name: Run data preparation and analyse point count data using N-mixture models for all species
-        run: Rscript 'Montserrat_yearly_report_automated.R' # this runs the RScript 
-
-
-
-
-
-
+        run: Rscript 'Montserrat_yearly_report_automated.R'
