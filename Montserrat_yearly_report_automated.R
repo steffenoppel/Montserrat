@@ -27,7 +27,7 @@ rename<- dplyr::rename
 ################################################################################
 
 # get data from the MS Access data base - this Database has to be manually updated which might have been stopped in 2024
-db <- odbcConnectAccess2007('Montserrat_Birds_2024.accdb') # connect to db, this might require Windows and a certain bit-version 
+db <- odbcConnectAccess2007('data/Montserrat_Birds_2024.accdb') # connect to db, this might require Windows and a certain bit-version 
 tblVisit <- sqlFetch(db, 'tblVisit') # observation level covariates
 tblBirdData <- sqlFetch(db, 'tblBirdData') # bird count data
 Point_hab <- sqlFetch(db, 'point_habitat_data')
@@ -42,10 +42,10 @@ head(tblBirdData)
 head(tblSpecies)
 
 # unzip the zip file in which ESRI's Survey123 App provides the data 
-unzip(zipfile = 'Montserrat_Forest_Bird_Survey.zip')
+unzip(zipfile = 'data/Montserrat_Forest_Bird_Survey.zip')
 
 # load data from Survey123 .csv files and remove all data which already exists in data base 
-import <- fread("Montserrat_Forest_Bird_Survey_0.csv") # read in data from Survey123 App 
+import <- fread("data/Montserrat_Forest_Bird_Survey_0.csv") # read in data from Survey123 App 
 import <- import %>% filter(!(GlobalID %in% tblVisit$GlobalID)) %>%
   filter(Editor!="edwards.alice_Ext")
 head(import)
