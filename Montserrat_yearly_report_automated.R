@@ -2,22 +2,22 @@
 #### script written by Filibert Heim, filibert.heim@posteo.de, but compomonents of this script most importantly the N-mix model in Nimble were written by Steffen Oppel 
 
 # load packages
-#library(tidyverse)
-#library(RODBC)
-#library(data.table)
-#library(lubridate)
-#library(reticulate)
-#library(splitstackshape)
-#library(MCMCvis)
-#library(nimble)
-#library(basicMCMCplots) # for trace plots called chainsPlot
-#library(parallel)
-#library(foreach)
-#library(doParallel)
-#library(dtplyr)
-#filter<-dplyr::filter
-#select<-dplyr::select
-#rename<- dplyr::rename
+library(tidyverse)
+library(RODBC)
+library(data.table)
+library(lubridate)
+library(reticulate)
+library(splitstackshape)
+library(MCMCvis)
+library(nimble)
+library(basicMCMCplots) # for trace plots called chainsPlot
+library(parallel)
+library(foreach)
+library(doParallel)
+library(dtplyr)
+filter<-dplyr::filter
+select<-dplyr::select
+rename<- dplyr::rename
 
 # for working local I have to set my working directory, I guess later this is done in the yaml script and can be removed
 #setwd('C:/Users/filib/Documents/Praktika/Sempach/Montserrat/')
