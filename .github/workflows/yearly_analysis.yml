@@ -35,7 +35,7 @@ jobs:
       - name: Install R dependencies 
         run: | # this initialises to run a certain function within R, here to set up the full environment and install all needed packages 
           Rscript -e 'install.packages(c("ggplot2","rmarkdown","knitr","remotes","tidyverse","data.table","lubridate","grid","gtable", "reticulate", "splitstackshape", "RODBC", # these packages are for the data preparation
-          "dtplyr", "ggplot2", "MCMCvis", "nimble", "basicMCMCplots", "parallel", "foreach", "doParallel"))' # these packages are for the analysis with N-mixture models in NIMBLE
+            "dtplyr", "ggplot2", "MCMCvis", "nimble", "basicMCMCplots", "parallel", "foreach", "doParallel"))' # these packages are for the analysis with N-mixture models in NIMBLE
           
           Rscript -e 'filter <- dplyr::filter; select <- dplyr::select; rename <- dplyr::rename' # prevent any conflicts with these commonly used functions 
 
