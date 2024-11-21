@@ -35,7 +35,7 @@ jobs:
         # shell: Rscript {0} # this command can be used to set the Rscript globally for this run; is redundant here because I used Rscript command already before each line of code
 
       - name: Run data preparation and analyse point count data using N-mixture models for all species
-        run: Rscript -e 'Montserrat_yearly_report_automated.R' # this runs the RScript 
+        run: Rscript 'Montserrat_yearly_report_automated.R' # this runs the RScript 
 
 
 
