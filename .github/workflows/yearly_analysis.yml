@@ -9,7 +9,7 @@ on:
 
   push: 
     path: 
-      - 'data/**' # triggers a workflow every time a new file is added to the data folder in the repository
+      - 'Montserrat/data/**' # triggers a workflow every time a new file is added to the data folder in the repository
  
 jobs: 
   build: # define a job
