@@ -24,6 +24,11 @@ jobs:
       - name: Checkout repository # provide a name for this step within the workflow
         uses: actions/checkout@v3
 
+      - name: Install ODBC drivers # needed to access data from MS Access db for data prior to 2025
+        run: |
+          sudo apt-get update 
+          sudo apt-get install -y unixodbc
+
       - name: Set up R environment
         uses: r-lib/actions/setup-r@v2
 
