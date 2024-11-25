@@ -12,7 +12,7 @@ on:
  
 jobs: 
   build: # define a job
-    runs-on: windows-latest # set Environment for the job, here use windows as the virtual machine environment 
+    runs-on: ubuntu-latest # set Environment for the job, here use windows as the virtual machine environment 
 
     steps: 
       - name: Checkout repository # provide a name for this step within the workflow
@@ -21,8 +21,8 @@ jobs:
       - name: Set up R environment
         uses: r-lib/actions/setup-r@v2
         
-      # - name: Install Nim from git repository # Install Nim from git repository; needed for installation of NIMBLE 
-        # uses: iffy/install-nim@v5
+      - name: Install Nim from git repository # Install Nim from git repository; needed for installation of NIMBLE 
+        uses: iffy/install-nim@v5
 
       # - name: Install NIMBLE # actually install NIMBLE ###### THIS IS WHERE THE JOB FAILS ###### Could not find a file with a .nimble extension inside the specified directory: D:\a\Montserrat\Montserrat
       #   run: nimble install -y
@@ -32,11 +32,8 @@ jobs:
 
       - name: Install R dependencies 
         run: | 
-          Rscript -e 'install.packages(c(
-            "ggplot2", "rmarkdown", "knitr", "remotes", "tidyverse", "data.table", 
-            "lubridate", "grid", "gtable", "reticulate", "splitstackshape", "RODBC",
-            "dtplyr", "ggplot2", "MCMCvis", "nimble", "basicMCMCplots", "parallel", 
-            "foreach", "doParallel", "dplyr"))' 
+          Rscript -e 'install.packages(c("ggplot2", "rmarkdown", "knitr", "remotes", "tidyverse", "data.table", "lubridate", "grid", "gtable", "reticulate", "splitstackshape", "RODBC",
+            "dtplyr", "ggplot2", "MCMCvis", "nimble", "basicMCMCplots", "parallel", "foreach", "doParallel", "dplyr"))' 
 
           Rscript -e 'filter <- dplyr::filter; select <- dplyr::select; rename <- dplyr::rename'
 
