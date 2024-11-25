@@ -12,7 +12,7 @@ on:
  
 jobs: 
   build: # define a job
-    runs-on: ubuntu-latest # set Environment for the job, here use Ubuntu as the virtual machine environment 
+    runs-on: windows-latest # set Environment for the job, here use windows as the virtual machine environment 
 
     steps: 
       - name: Checkout repository # provide a name for this step within the workflow
@@ -32,8 +32,7 @@ jobs:
             "ggplot2", "rmarkdown", "knitr", "remotes", "tidyverse", "data.table", 
             "lubridate", "grid", "gtable", "reticulate", "splitstackshape", "RODBC",
             "dtplyr", "ggplot2", "MCMCvis", "nimble", "basicMCMCplots", "parallel", 
-            "foreach", "doParallel"
-          ))' 
+            "foreach", "doParallel", "NIMBLE"))' 
 
           Rscript -e 'filter <- dplyr::filter; select <- dplyr::select; rename <- dplyr::rename'
 
