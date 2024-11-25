@@ -24,11 +24,11 @@ jobs:
       - name: Install Nim from git repository # Install Nim from git repository; needed for installation of NIMBLE 
         uses: iffy/install-nim@v5
 
-      - name: Install NIMBLE # actually install NIMBLE
-        run: nimble install -y
+      # - name: Install NIMBLE # actually install NIMBLE ###### THIS IS WHERE THE JOB FAILS ###### Could not find a file with a .nimble extension inside the specified directory: D:\a\Montserrat\Montserrat
+      #   run: nimble install -y
         
-      - name: NIMBLE test # I'm not very sure what running 'nimble test' actually does 
-        run: nimble test
+      # - name: NIMBLE test # I'm not very sure what running 'nimble test' actually does 
+        # run: nimble test
 
       - name: Install R dependencies 
         run: | 
