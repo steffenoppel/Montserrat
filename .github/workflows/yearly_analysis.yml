@@ -37,8 +37,11 @@ jobs:
 
           Rscript -e 'filter <- dplyr::filter; select <- dplyr::select; rename <- dplyr::rename'
 
-      - name: List Installed Packages
-        run: Rscript -e 'installed.packages()[, "Package"]'
+      - name: Install NIMBLE  # this installs the latest stable NIMBLE verion, code example https://github.com/marketplace/actions/install-nim
+        uses: actions/checkout@v2
+        uses: iffy/install-nim@v5
+        run: nimble install -y
+        run: nimble test
 
       - name: Run data preparation and analyse point count data using N-mixture models for all species
         run: Rscript 'Montserrat_yearly_report_automated.R'
