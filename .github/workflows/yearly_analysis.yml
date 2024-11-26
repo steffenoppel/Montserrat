@@ -30,14 +30,14 @@ jobs: # define jobs
       # - name: NIMBLE test # I'm not very sure what running 'nimble test' actually does 
         # run: nimble test
 
-#      - name: Install R dependencies 
-#        run: | 
-#          Rscript -e 'install.packages(c("tidyverse", "data.table"))' 
-#
-#          Rscript -e 'filter <- dplyr::filter; select <- dplyr::select; rename <- dplyr::rename'
-#
-#      - name: Run general data preparation 
-#        run: Rscript 'Montserrat_forest_bird_monitoring_data_prep.R' 
+      - name: Install R dependencies 
+        run: | 
+          Rscript -e 'install.packages(c("tidyverse", "data.table"))' 
+
+          Rscript -e 'filter <- dplyr::filter; select <- dplyr::select; rename <- dplyr::rename'
+
+      - name: Run general data preparation 
+        run: Rscript 'Montserrat_forest_bird_monitoring_data_prep.R' 
 #
 #      - name: Push general prepared data to git repository 
 #        run: # add code which pushes the object 
