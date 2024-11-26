@@ -30,7 +30,7 @@ removal<-c(99,76)	# these are the two Points that cause error in JAGS, but here
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # load data from Montserrat Access data base which has been saved in a RData file by using the script 'Montserrat_forest_bird_monitoring_data_extraction_from_db.R'
-load(file = 'Montserrat_forest_bird_monitoring_data_2011_2024.RData')
+load(file = 'data/Montserrat_forest_bird_monitoring_data_2011_2024.RData')
 
 # load data from Survey123 .csv files and remove all data which already exists in data base
 unzip(zipfile = 'data/Montserrat_Forest_Bird_Survey.zip') # unzip the zip file in which ESRI's Survey123 App provides the data 
