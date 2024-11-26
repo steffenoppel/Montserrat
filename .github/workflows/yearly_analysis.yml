@@ -42,6 +42,25 @@ jobs: # define jobs
 
       - name: Run general data preparation 
         run: Rscript 'Montserrat_forest_bird_monitoring_data_prep.R' 
+
+      - name: Configure git # this code is needed to make the created RData with all prepared data in the workflow available in the repo outside any git actions 
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Commit changes to git repository 
+        run: |
+          git add data/MONTSERRAT_ANNUAL_DATA_INPUT.RData
+          git commit -m "Automatically in git actions prepared data from Montserrat Forest Monitoring for any analysis" || echo "No changes to commit" # the echo ensures that even if there are no changes, and no commit is performed, the workflow wont fail
+
+
+      - name: Commit changes to the repository
+        env: 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git push origin HEAD:main
+          
+
 #
 #      - name: Push general prepared data to git repository 
 #        run: # add code which pushes the object 
