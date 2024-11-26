@@ -245,7 +245,7 @@ needed_objects <- c('countdata', 'obsCov', 'siteCov', 'tblSpecies', 'YEAR', 'SPE
 rm(list = setdiff(ls(), needed_objects)) # remove all unneeded objects 
 
 # save the prepared data for other possible analysis 
-save.image('MONTSERRAT_ANNUAL_DATA_INPUT.RData')
+save.image('data/MONTSERRAT_ANNUAL_DATA_INPUT.RData')
 # save.image(paste0('data/MONTSERRAT_ANNUAL_DATA_INPUT', YEAR, '.RData')) # for storing the file with a year flag
 
 
