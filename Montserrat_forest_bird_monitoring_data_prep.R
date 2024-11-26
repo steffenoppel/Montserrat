@@ -9,18 +9,17 @@
 # 1. Preparations  --------
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# create year, choose species for analysis and select points that might cause isses for removing them 
-YEAR <- year(Sys.Date()) # set the most recent year 
-SPECIES <- c('MTOR','FOTH','BRQD','TREM','ACHU','PTCA','PETH','GTCA','SBTH','SNPI','CAEL','BANA') # set species for which we actually want to conduct analysis 
-removal<-c(99,76)	# these are the two Points that cause error in JAGS, but here 
-
-
 # load packages
 library(tidyverse) 
 library(data.table)
 select <- dplyr::select
 rename <- dplyr::rename
 filter <- dplyr::filter
+
+# create year, choose species for analysis and select points that might cause isses for removing them 
+YEAR <- year(Sys.Date()) # set the most recent year 
+SPECIES <- c('MTOR','FOTH','BRQD','TREM','ACHU','PTCA','PETH','GTCA','SBTH','SNPI','CAEL','BANA') # set species for which we actually want to conduct analysis 
+removal<-c(99,76)	# these are the two Points that cause error in JAGS, but here 
 
 # set working directory
 # getwd()
@@ -34,8 +33,8 @@ filter <- dplyr::filter
 load(file = 'Montserrat_forest_bird_monitoring_data_2011_2024.RData')
 
 # load data from Survey123 .csv files and remove all data which already exists in data base
-unzip(zipfile = 'Montserrat_Forest_Bird_Survey.zip') # unzip the zip file in which ESRI's Survey123 App provides the data 
-import <- fread("Montserrat_Forest_Bird_Survey_0.csv") # read in data from Survey123 App 
+unzip(zipfile = 'data/Montserrat_Forest_Bird_Survey.zip') # unzip the zip file in which ESRI's Survey123 App provides the data 
+import <- fread("data/Montserrat_Forest_Bird_Survey_0.csv") # read in data from Survey123 App 
 # import <- import %>% filter(!(GlobalID %in% tblVisit$GlobalID)) %>% # I'm not totally sure if this step is needed, revise this later 
   # filter(Editor!="edwards.alice_Ext")
 head(import)
