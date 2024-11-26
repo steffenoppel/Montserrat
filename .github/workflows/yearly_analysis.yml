@@ -12,7 +12,7 @@ on:
  
 jobs: # define jobs
   job_data_preparation: # set the name of a below defined job
-    runs-on: ubuntu-latest # set Environment for the job, here use windows as the virtual machine environment 
+    runs-on: macos-latest # set Environment for the job, here use windows as the virtual machine environment 
 
     steps: 
       - name: Checkout repository # provide a name for this step within the job
