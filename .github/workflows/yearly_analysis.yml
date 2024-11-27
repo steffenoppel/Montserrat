@@ -87,11 +87,41 @@ jobs: # define jobs
       - name: Run general data preparation 
         run: Rscript 'Montserrat_forest_bird_monitoring_data_prep_Nmix_model_def_nimble.R' # run RScript to prepare data for Nmix models in NIMBLE
 
-      - name: Pass prepared data and defined/initialised model to next job using artifacts 
+      - name: Pass prepared data and defined model to next job # using artifacts 
         uses: actions/upload-artifact@v4
         with: 
           name: prepared data and defined NIMBLE model 
           path: data/Montserrat_forest_bird_monitoring_yearly_NIMBLE_model_data.RData
+          retention-days: 1 # this sets the time for how long the artifact is saved under the artifact link
+
+  job_running_Nmix_models_in_NIMBLE:
+    runs-on: macos-latest 
+    needs: job_data_preparation_nimble
+    
+    steps: 
+      - name: Checkout repository 
+        uses: actions/checkout@v3
+
+      - name: Get prepared data and defined model from previous job # using artifacts
+        uses: actions/download-artifact@v4
+        with: 
+          name: prepared data and defined NIMBLE model 
+
+      - name: Set up R environment
+        uses: r-lib/actions/setup-r@v2
+
+      - name: Install R dependencies 
+        run: | 
+          Rscript -e 'install.packages(c("tidyverse", "data.table", "nimble"))' 
+          Rscript -e 'filter <- dplyr::filter; select <- dplyr::select; rename <- dplyr::rename'
+
+      - name: Verify R dependencies # this is just a step to check if everything with the installation of packages worked
+        run: |
+          Rscript -e 'if (!requireNamespace("tidyverse", quietly = TRUE)) { stop("tidyverse package not installed.") }'
+
+      - name: Run general data preparation 
+        run: Rscript 'Montserrat_forest_bird_monitoring_data_prep_Nmix_model_def_nimble.R' # run RScript to prepare data for Nmix models in NIMBLE
+
           
 
 #
