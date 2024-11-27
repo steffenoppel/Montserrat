@@ -61,6 +61,7 @@ jobs: # define jobs
 
   job_data_preparation_nimble: # start another job
     runs-on: macos-latest
+    needs: job_data_preparation # set dependency to first job because the output of this job is needed for the current one 
     
     steps:
       - name: Checkout repository # provide a name for this step within the job
