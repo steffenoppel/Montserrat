@@ -21,6 +21,10 @@ jobs: # define jobs
       - name: Install pkgconf # this step is only needed to overcome a few non-fatal error messages 
         run: brew install pkgconf || echo "pkgconf is already installed"
 
+      - name: Fix pkg-config requirement # somehow in the step setup R environment explicitely the pkg-config is needed which is an older version of pkgconf, however, here I explicitely link both versions to overcome the issue 
+        run: |
+          ln -s $(brew --prefix pkgconf)/bin/pkgconf $(brew --prefix)/bin/pkg-config || true
+
       - name: Set up R environment
         uses: r-lib/actions/setup-r@v2
         
