@@ -270,8 +270,8 @@ parameters.trend <- c("fit", "fit.new","trend","trend2","totalN","anndet")  #
 
 # MCMC settings
 # number of posterior samples per chain is n.iter - n.burnin
-n.iter <- 50   #150000
-n.burnin <- 25  #100000
+n.iter <- 150000/2   #150000
+n.burnin <- 100000/2  #100000
 n.chains <- 3
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
