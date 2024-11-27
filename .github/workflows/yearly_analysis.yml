@@ -25,11 +25,10 @@ jobs: # define jobs
       #   run: |
       #     ln -s $(brew --prefix pkgconf)/bin/pkgconf $(brew --prefix)/bin/pkg-config || true
       #     
-      - name: Install R with Homebrew
+      - name: Install R from CRAN
         run: |
-         brew install --cask r
-         brew install r
-         brew link --overwrite r
+         curl -O https://cran.r-project.org/bin/macosx/R-4.3.1.pkg
+         sudo installer -pkg R-4.3.1.pkg -target /
          
       # - name: Set up R environment
       #   uses: r-lib/actions/setup-r@v2
