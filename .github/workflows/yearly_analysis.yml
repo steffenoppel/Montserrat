@@ -12,7 +12,7 @@ on:
  
 jobs: # define jobs
   job_data_preparation: # set the name of a below defined job
-    runs-on: macos-latest # set Environment for the job, here use windows as the virtual machine environment 
+    runs-on: ubuntu-latest # set Environment for the job, here use windows as the virtual machine environment 
 
     steps: 
       - name: Checkout repository # provide a name for this step within the job
@@ -60,7 +60,7 @@ jobs: # define jobs
           git push origin HEAD:main
 
   job_data_preparation_nimble: # start another job
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     needs: job_data_preparation # set dependency to first job because the output of this job is needed for the current one 
     
     steps:
