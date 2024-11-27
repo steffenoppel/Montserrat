@@ -118,7 +118,7 @@ summary<-surveys %>% select(year, Point, Count, Date) %>%
 totals<-summary %>% group_by(Count) %>%
   summarise(N=sum(N), n_spec=length(unique(Species)))
 
-table1<-summary2024 %>% spread(key=Count, value=N, fill = 0) %>%
+table1<-summary %>% spread(key=Count, value=N, fill = 0) %>%
   filter(!is.na(Species)) %>%
   mutate(Species=tblSpecies$Species[match(Species,tblSpecies$SpeciesCode)]) %>%
   arrange(desc(`1`))
