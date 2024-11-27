@@ -91,7 +91,7 @@ jobs: # define jobs
         uses: actions/upload-artifact@v4
         with: 
           name: prepared data and defined NIMBLE model 
-          path: output/Montserrat_forest_bird_monitoring_yearly_NIMBLE_model_data.RData
+          path: data/Montserrat_forest_bird_monitoring_yearly_NIMBLE_model_data.RData
           
 
 #
