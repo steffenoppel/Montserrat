@@ -131,7 +131,7 @@ saveRDS(TRENDMOD,sprintf("output/%s_trend_model_nimble.rds",s))
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
 
 ### COMBINE SAMPLES ACROSS CHAINS
-# MCMCout<-as_tibble(rbind(TRENDMOD$samples[[1]],TRENDMOD$samples[[2]],TRENDMOD$samples[[3]]))
+MCMCout<-as_tibble(rbind(TRENDMOD$samples[[1]],TRENDMOD$samples[[2]],TRENDMOD$samples[[3]]))
   
 ### PLOT AND SAVE GoF PLOT
 # ylow<-round((min(MCMCout$fit,MCMCout$fit.new, na.rm=T)-50)/1000,1)*1000
