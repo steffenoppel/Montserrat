@@ -101,6 +101,7 @@ jobs: # define jobs
         uses: actions/download-artifact@v4
         with: 
           name: prepared data and defined NIMBLE model 
+          path: data/  # Specify the destination directory
 
       - name: Set up R environment
         uses: r-lib/actions/setup-r@v2
