@@ -107,15 +107,36 @@ jobs: # define jobs
 
       - name: Install R dependencies 
         run: | 
-          Rscript -e 'install.packages(c("tidyverse", "data.table", "nimble"))' 
+          Rscript -e 'install.packages(c("tidyverse", "data.table", "nimble", "lubridate", "MCMCvis", "parallel", "doParallel"))' 
           Rscript -e 'filter <- dplyr::filter; select <- dplyr::select; rename <- dplyr::rename'
 
       - name: Run Nmix model in NIMBLE for ${{ matrix.SPECIES }}
         env: # create an environment variable that is passed in this step
           SPECIES: ${{ matrix.SPECIES }}
         run: |
-          Rscript -e 'args <- commandArgs(trailingOnly = TRUE); species <- args[1]; cat("Running script for species:", species, "\n")' ${{ matrix.SPECIES }} # run RScript with models for each species
-          # Rscript -e 'Montserrat_forest_bird_monitoring_run_Nmix_nimble.R' ${{ matrix.SPECIES }} # run RScript with models for each species
+          Rscript -e 'Montserrat_forest_bird_monitoring_run_Nmix_nimble.R' ${{ matrix.SPECIES }} # run RScript with models for each species
+
+      - name: Configure git # this code is needed to make the created RData with all prepared data in the workflow available in the repo outside any git actions 
+        run: |
+          git config --global user.name "github-actions[bot]" 
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Commit changes to git repository 
+        run: |
+          git add output/${{ matrix.SPECIES }}_trend_model_nimble.rds # this selects solely the file for a certain species to pass to github
+          git add output/${{ matrix.SPECIES }}_trend_estimates2024.csv
+          git commit -m "Output of Nmix models from NIMBLE calculated in git actions workflow" || echo "No changes to commit" # the echo ensures that even if there are no changes, and no commit is performed, the workflow wont fail
+
+      - name: Pull latest changes from main
+        run: |
+          git fetch origin main
+          git merge --no-edit origin/main
+          
+      - name: Push changes to the repository
+        env: 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git push origin HEAD:main
 
           
 
