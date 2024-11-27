@@ -10,8 +10,8 @@
 # load packages 
 library(tidyverse)
 library(data.table) 
-library(MCMCvis)
-library(nimble)
+library(rmarkdown)
+
 
 # load data which has been prepared in the script 'Montserrat_forest_bird_monitoring_data_prep_for_Nmix_nimble.R'
 load(file = 'data/Montserrat_forest_bird_monitoring_yearly_NIMBLE_model_data.RData')
@@ -19,7 +19,7 @@ load(file = 'data/Montserrat_forest_bird_monitoring_yearly_NIMBLE_model_data.RDa
 
 # needed: SPECIES, siteCov, obsCov
 
-c('nimble',"tidyverse","MCMCvis","tidyverse","dplyr","data.table")
+c('nimble',"tidyverse","tidyverse","dplyr","data.table")
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 2. Load in data from single models and create overview table with trends and annual estimates --------
@@ -45,8 +45,8 @@ for (f in allout){
 }
 
 # export two files with collected data 
-write.table(annestimates,"output/Annual_estimates2024.csv", row.names=F, sep=",")
-write.table(trendout,"output/Trend_estimates2024.csv", row.names=F, sep=",")
+write.table(annestimates, "output/Annual_estimates.csv", row.names=F, sep=",")
+write.table(trendout,"output/Trend_estimates.csv", row.names=F, sep=",")
 
 
 
@@ -97,24 +97,25 @@ annestimates %>%
         axis.title.y=element_text(margin=margin(0,20,0,0)),
         strip.background=element_rect(fill="white", colour="black"))
 
-ggsave("output/Montserrat_ForestBird_Trends_2024.pdf", width=13, height=16)
+ggsave("output/Montserrat_ForestBird_Trends.pdf", width=13, height=16)
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 4. Provide basic summary report for annual news article --------
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-surveys2024<-obsCov %>% filter(year==2024) %>% 
+# all this output is created for the most recent YEAR
+surveys<-obsCov %>% filter(year==YEAR) %>% 
   mutate(Point=as.integer(as.character(Point)))
-birds2024<-countdata %>% filter(year==2024) %>% select(-Time,-Rain,-Wind,-day,-time,-activity,-Date,-Time,-VisitID, -Observers) %>%
+birds2024<-countdata %>% filter(year==YEAR) %>% select(-Time,-Rain,-Wind,-day,-time,-activity,-Date,-Time,-VisitID, -Observers) %>%
   gather(key=Species, value=N, -year,-Point,-Count) %>%
   mutate(Point=as.integer(as.character(Point)))
-summary2024<-surveys2024 %>% select(year, Point, Count, Date) %>%
+summary<-surveys %>% select(year, Point, Count, Date) %>%
   left_join(birds2024, by=c('year','Point','Count')) %>%
   group_by(Count, Species) %>%
   summarise(N=sum(N, na.rm=T))
 
-totals2024<-summary2024 %>% group_by(Count) %>%
+totals<-summary %>% group_by(Count) %>%
   summarise(N=sum(N), n_spec=length(unique(Species)))
 
 table1<-summary2024 %>% spread(key=Count, value=N, fill = 0) %>%
@@ -141,12 +142,10 @@ table2<-trendout %>%
 #Sys.setenv(RSTUDIO_PANDOC="C:/Users/Inge Oppel/AppData/Local/Pandoc")
 # Sys.setenv(RSTUDIO_PANDOC="C:/Program Files/RStudio/bin/pandoc")
 #
-#rmarkdown::render('C:\\STEFFEN\\OneDrive - THE ROYAL SOCIETY FOR THE PROTECTION OF BIRDS\\STEFFEN\\RSPB\\UKOT\\Montserrat\\Analysis\\Population_status_assessment\\AnnualMonitoring\\Annual_abundance_report.Rmd',
-#                  output_file = "Montserrat_ForestBird_AnnualSummary2024.html",
-#                  output_dir = 'C:\\STEFFEN\\OneDrive - THE ROYAL SOCIETY FOR THE PROTECTION OF BIRDS\\STEFFEN\\RSPB\\UKOT\\Montserrat\\Analysis\\Population_status_assessment\\AnnualMonitoring')
+# rmarkdown::render('Annual_abundance_report_rawdat.Rmd', ########## THIS DOCUMENT IS NOT UPDATED YET
+#                  output_file = "Montserrat_ForestBird_AnnualSummary_rawdat.html")
 
-#rmarkdown::render('C:\\Users\\sop\\Documents\\Steffen\\RSPB\\Montserrat\\Annual_abundance_report_modelled.Rmd',
-#                  output_file = "Montserrat_ForestBird_AnnualSummary2024.html",
-#                  output_dir = 'C:\\Users\\sop\\Documents\\Steffen\\RSPB\\Montserrat')
+rmarkdown::render('Annual_abundance_report_modelled.Rmd',
+                  output_file = "output/Montserrat_ForestBird_AnnualSummary_modelled.html")
 
 
