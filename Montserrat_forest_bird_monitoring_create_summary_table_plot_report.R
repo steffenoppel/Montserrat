@@ -35,7 +35,7 @@ fullnames<-c("Montserrat Oriole", "Forest Thrush", "Bridled Quail-Dove", "Brown 
              "Caribbean Elaenia","Bananaquit")
 
 # collect all files that have been created with output from Nmix models and save data in annestimates and trendout
-allout<-list.files(path = 'output/', pattern="trend_estimates2024.csv")
+allout<-list.files(path = 'output/', pattern="trend_estimates.csv")
 annestimates<-tibble()
 trendout<-tibble()
 for (f in allout){
