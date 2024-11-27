@@ -151,7 +151,7 @@ out$species<-s
 out$BayesP<-mean(MCMCout$fit > MCMCout$fit.new)
 out$GoFSlope<-mean(MCMCout$fit) / mean(MCMCout$fit.new)
 names(out)[c(3,4,5)]<-c('lcl','median', 'ucl')
-fwrite(out,sprintf("output/%s_trend_estimates2024.csv",s))
+
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -162,5 +162,5 @@ fwrite(out,sprintf("output/%s_trend_estimates2024.csv",s))
 saveRDS(TRENDMOD,sprintf("output/%s_trend_model_nimble.rds",s))
 
 # save trendestimates to output
-fwrite(out,sprintf("output/%s_trend_estimates2024.csv",s))
+fwrite(out,sprintf("output/%s_trend_estimates.csv",s))
 
