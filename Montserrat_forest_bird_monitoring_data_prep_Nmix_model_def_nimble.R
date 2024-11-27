@@ -319,7 +319,7 @@ test$calculate()
 # rm(list = setdiff(ls(), needed_objects)) # remove all unneeded objects 
 
 # save the prepared data for other possible analysis 
-save.image('Montserrat_forest_bird_monitoring_yearly_NIMBLE_model_data.RData')
+save.image('data/Montserrat_forest_bird_monitoring_yearly_NIMBLE_model_data.RData')
 
 
 
