@@ -125,7 +125,7 @@ jobs: # define jobs
       - name: Commit changes to git repository 
         run: |
           git add output/${{ matrix.SPECIES }}_trend_model_nimble.rds # this selects solely the file for a certain species to pass to github
-          git add output/${{ matrix.SPECIES }}_trend_estimates2024.csv
+          git add output/${{ matrix.SPECIES }}_trend_estimates.csv
           git commit -m "Output of Nmix models from NIMBLE calculated in git actions workflow" || echo "No changes to commit" # the echo ensures that even if there are no changes, and no commit is performed, the workflow wont fail
 
       - name: Pull latest changes from main
