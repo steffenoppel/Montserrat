@@ -152,7 +152,7 @@ jobs: # define jobs
 
       - name: Install R dependencies 
         run: | 
-          Rscript -e 'install.packages(c("tidyverse", "data.table"))' 
+          Rscript -e 'install.packages(c("tidyverse", "data.table", "rmarkdown", "knitr"))' 
           Rscript -e 'filter <- dplyr::filter; select <- dplyr::select; rename <- dplyr::rename'
 
       - name: Run general data preparation 
@@ -165,9 +165,10 @@ jobs: # define jobs
 
       - name: Commit changes to git repository 
         run: |
-          git add output/Annual_estimates2024.csv
-          git add output/Trend_estimates2024.csv
-          git add output/Montserrat_ForestBird_Trends_2024.pdf
+          git add output/Annual_estimates.csv
+          git add output/Trend_estimates.csv
+          git add output/Montserrat_ForestBird_Trends.pdf
+          git add output/Montserrat_ForestBird_AnnualSummary_modelled.html
           git commit -m "Summary tables of annual estimates, trends and plot from Nmix calculated in git actions workflow" || echo "No changes to commit" # the echo ensures that even if there are no changes, and no commit is performed, the workflow wont fail
 
       - name: Pull latest changes from main
