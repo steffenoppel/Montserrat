@@ -114,7 +114,7 @@ jobs: # define jobs
         env: # create an environment variable that is passed in this step
           SPECIES: ${{ matrix.SPECIES }}
         run: |
-          Rscript -e 'Montserrat_forest_bird_monitoring_run_Nmix_nimble.R' ${{ matrix.SPECIES }} # run RScript with models for each species
+          Rscript 'Montserrat_forest_bird_monitoring_run_Nmix_nimble.R' ${{ matrix.SPECIES }} # run RScript with models for each species
 
       - name: Configure git # this code is needed to make the created RData with all prepared data in the workflow available in the repo outside any git actions 
         run: |
