@@ -18,6 +18,9 @@ jobs: # define jobs
       - name: Checkout repository # provide a name for this step within the job
         uses: actions/checkout@v3
 
+      - name: Install pkgconf to avoid non fatal error messages 
+        run: brew install pkgconf || echo "pkgconf is already installed"
+
       - name: Set up R environment
         uses: r-lib/actions/setup-r@v2
         
