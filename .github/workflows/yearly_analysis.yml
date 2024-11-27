@@ -126,7 +126,7 @@ jobs: # define jobs
         env: # create an environment variable that is passed in this step
           SPECIES: ${{ matrix.SPECIES }}
         run: |
-          Rscript -e 'args <- commandArgs(trailingOnly = TRUE); species <- args[1]  # Get the first argument passed (the species); cat("Running NIMBLE model for species:", species, "\n"); cat("Finished model for species:", species, "\n")' ${{ matrix.SPECIES }} # run RScript with models for each species
+          Rscript -e 'args <- commandArgs(trailingOnly = TRUE); species <- args[1]; cat("Running script for species:", species, "\n")' ${{ matrix.SPECIES }} # run RScript with models for each species
           # Rscript -e 'Montserrat_forest_bird_monitoring_run_Nmix_nimble.R' ${{ matrix.SPECIES }} # run RScript with models for each species
 
           
