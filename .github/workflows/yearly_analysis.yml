@@ -81,7 +81,7 @@ jobs: # define jobs
           Rscript -e 'if (!requireNamespace("tidyverse", quietly = TRUE)) { stop("tidyverse package not installed.") }'
 
       - name: Run general data preparation 
-        run: Rscript 'Montserrat_forest_bird_monitoring_data_prep_for_Nmix_nimble.R' # run RScript to prepare data for Nmix models in NIMBLE
+        run: Rscript 'Montserrat_forest_bird_monitoring_data_prep_Nmix_model_def_nimble.R' # run RScript to prepare data for Nmix models in NIMBLE
           
 
 #
