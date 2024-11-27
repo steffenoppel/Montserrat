@@ -16,11 +16,6 @@ library(rmarkdown)
 # load data which has been prepared in the script 'Montserrat_forest_bird_monitoring_data_prep_for_Nmix_nimble.R'
 load(file = 'data/Montserrat_forest_bird_monitoring_yearly_NIMBLE_model_data.RData')
 
-
-# needed: SPECIES, siteCov, obsCov
-
-c('nimble',"tidyverse","tidyverse","dplyr","data.table")
-
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 2. Load in data from single models and create overview table with trends and annual estimates --------
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
