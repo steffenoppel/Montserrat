@@ -17,10 +17,7 @@ jobs: # define jobs
     steps: 
       - name: Checkout repository # provide a name for this step within the job
         uses: actions/checkout@v3
-
-      - name: Uninstall pkgconfig to avoid errors and warnings # this is just temporarily included to avoid error message 
-        run: brew uninstall pkg-config@0.29.2
-
+        
       - name: Set up R environment
         uses: r-lib/actions/setup-r@v2
         
