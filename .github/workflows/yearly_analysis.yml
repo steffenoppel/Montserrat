@@ -18,11 +18,6 @@ jobs: # define jobs
       - name: Checkout repository # provide a name for this step within the job
         uses: actions/checkout@v3
 
-      - name: Suppress output and errors from the setup process
-        run: | # Redirect both stdout and stderr to /dev/null to mute the warnings and errors
-          echo "Suppressing output..."
-          exec > /dev/null 2>&1
-
       - name: Set up R environment
         uses: r-lib/actions/setup-r@v2 
         
