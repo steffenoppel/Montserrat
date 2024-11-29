@@ -12,8 +12,7 @@ library(data.table)
 library(lubridate)
 library(MCMCvis)
 library(nimble)
-library(parallel)
-library(doParallel)
+
 
 # load data which has been prepared in the script 'Montserrat_forest_bird_monitoring_data_prep_for_Nmix_nimble.R'
 load(file = 'data/Montserrat_forest_bird_monitoring_yearly_NIMBLE_model_data.RData')
@@ -21,17 +20,8 @@ load(file = 'data/Montserrat_forest_bird_monitoring_yearly_NIMBLE_model_data.RDa
 # set species s for which the model should run 
 s <- commandArgs(trailingOnly = TRUE)[1] # this runs only in the github actions workflow  
 
-# set clusters that should be used in a parallel manner 
-cl<-makeCluster(4)
-registerDoParallel(cl)
-
 # print a message for the github actions workflow 
 cat("Running Nmixture models in NIMBLE for the species", s, 'with', n.iter, 'iterations after', n.burnin, 'iterations in the burnin for overall', n.chains, 'chains.', "\n")
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# 2. Start to run model for one SPECIES  --------
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
