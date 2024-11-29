@@ -12,18 +12,12 @@ library(data.table)
 library(lubridate)
 library(MCMCvis)
 library(nimble)
-library(parallel)
-library(doParallel)
 
 # load data which has been prepared in the script 'Montserrat_forest_bird_monitoring_data_prep_for_Nmix_nimble.R'
 load(file = 'data/Montserrat_forest_bird_monitoring_yearly_NIMBLE_model_data.RData')
 
 # set species s for which the model should run 
 s <- commandArgs(trailingOnly = TRUE)[1] # this runs only in the github actions workflow  
-
-# set clusters that should be used in a parallel manner 
-cl<-makeCluster(4)
-registerDoParallel(cl)
 
 # print a message for the github actions workflow 
 cat("Running Nmixture models in NIMBLE for the species", s, 'with', n.iter, 'iterations after', n.burnin, 'iterations in the burnin for overall', n.chains, 'chains.', "\n")
@@ -90,14 +84,14 @@ Nst<-as.matrix(bird_s %>%
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
 
 #### DISTINGUISH CONSTANTS AND DATA
-# Constants are values that do not change, e.g. vectors of known index values or the indices used to define for loops
+# Constants are values that do not change, e.g. vectors of known index values or the indices used to define for loops - these have been defined in the data preparation script
 # Data are values that you might want to change, basically anything that only appears on the left of a ~
   
 trend.data <- list(M = BIRD.y)
   
   
 ####   ADD INITIAL VALUES----     ################################
-## MUST ADD Nst TO INITIAL VALUESBE FOR ALL PARAMETERS
+## MUST ADD Nst TO INITIAL VALUES FOR ALL PARAMETERS
 ## NIMBLE CAN HAVE CONVERGENCE PROBLEMS IF DIFFERENT INITS ARE SPECIFIED: https://groups.google.com/g/nimble-users/c/dgx9ajOniG8
 
 inits.trend$p = array(runif(trend.constants$nsite*trend.constants$nrep*trend.constants$nyear, 0.3,0.7),
