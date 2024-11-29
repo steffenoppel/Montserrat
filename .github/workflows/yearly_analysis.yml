@@ -114,7 +114,7 @@ jobs: # define jobs
 
       - name: Install R dependencies 
         run: | 
-          Rscript -e 'install.packages(c("tidyverse", "data.table", "nimble", "lubridate", "MCMCvis", "parallel", "doParallel"))' 
+          Rscript -e 'install.packages(c("tidyverse", "data.table", "nimble", "lubridate", "MCMCvis"))' 
           Rscript -e 'filter <- dplyr::filter; select <- dplyr::select; rename <- dplyr::rename'
 
       - name: Run Nmix model in NIMBLE for ${{ matrix.SPECIES }}
