@@ -164,17 +164,22 @@ jobs: # define jobs
       - name: Run general data preparation 
         run: Rscript 'Montserrat_forest_bird_monitoring_create_summary_table_plot_report.R' # run RScript to prepare data for Nmix models in NIMBLE
 
+      - name: Get current YEAR # to only push these files with the correct YEAR
+        run: echo "YEAR=$(date +'%Y')" >> $GITHUB_ENV
+
       - name: Configure git # this code is needed to make the created RData with all prepared data in the workflow available in the repo outside any git actions 
         run: |
           git config --global user.name "github-actions[bot]" 
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Commit changes to git repository 
+        env: 
+          YEAR: ${{ env.YEAR }}
         run: |
-          git add output/Annual_estimates.csv
+          git add output/Annual_estimates.csv # this will overwrite the outputs every year!
           git add output/Trend_estimates.csv
-          git add output/Montserrat_ForestBird_Trends.pdf
-          git add output/Montserrat_ForestBird_AnnualSummary_modelled.html
+          git add output/Montserrat_ForestBird_Trends${YEAR}.pdf # this will lead to a library of annual reports and trend plots for every year 
+          git add output/Montserrat_ForestBird_AnnualReport_${YEAR}.html
           git commit -m "Summary tables of annual estimates, trends and plot from Nmix calculated in git actions workflow" || echo "No changes to commit" # the echo ensures that even if there are no changes, and no commit is performed, the workflow wont fail
 
       - name: Pull latest changes from main
