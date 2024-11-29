@@ -58,10 +58,10 @@ trendout$fullspec<-fullnames[match(trendout$species, SPECIES)]
 
 # create a plot with abundance trends 
 trendout<-trendout %>%
-  mutate(col=ifelse(lcl<0,ifelse(ucl<0,"darkred","black"),ifelse(ucl>0,"forestgreen","black"))) %>%
-  mutate(col=ifelse(species=="CAEL","darkred",col))
+  mutate(col=ifelse(lcl<0,ifelse(ucl<0,"darkred","black"),ifelse(ucl>0,"forestgreen","black"))) #%>%
+  #mutate(col=ifelse(species=="CAEL","darkred",col))  ## this is a hack we should not need
 annestimates %>% 
-  mutate(Year=rep(seq(2011,2024), length(allout))) %>%
+  mutate(Year=rep(seq(2011,YEAR), length(allout))) %>%  ## need to futureproof this by making max year dynamic
   filter(Year!=2020) %>%
   mutate(col = as.factor(trendout$col[match(species,trendout$species)])) %>%
   
@@ -80,7 +80,7 @@ annestimates %>%
   theme(legend.text = element_blank())+
   
   ## format axis ticks
-  scale_x_continuous(name="Year", breaks=seq(2011,2023,2), labels=as.character(seq(2011,2023,2)))+
+  scale_x_continuous(name="Year", breaks=seq(2011,YEAR,2), labels=as.character(seq(2011,YEAR,2)))+   ## need to futureproof this by making max year dynamic
   #scale_y_continuous(name="Number of Birds at 67 Sampling Points", breaks=seq(0,4000,500), labels=as.character(seq(0,4000,500)))+
   ylab(sprintf("Number of birds at %i sampling points",nsites)) +
   scale_color_manual(values = c("black","darkred", "forestgreen"))+
@@ -92,7 +92,7 @@ annestimates %>%
         axis.title.y=element_text(margin=margin(0,20,0,0)),
         strip.background=element_rect(fill="white", colour="black"))
 
-ggsave("output/Montserrat_ForestBird_Trends.pdf", width=13, height=16)
+ggsave(sprintf("output/Montserrat_ForestBird_Trends%s.pdf",YEAR), width=13, height=16)   ## need to futureproof this by making max year dynamic
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -141,6 +141,6 @@ table2<-trendout %>%
 #                  output_file = "Montserrat_ForestBird_AnnualSummary_rawdat.html")
 
 rmarkdown::render('Annual_abundance_report_modelled.Rmd',
-                  output_file = "output/Montserrat_ForestBird_AnnualSummary_modelled.html")
+                  output_file = sprintf("output/Montserrat_ForestBird_AnnualReport_%s.html",YEAR)) ## need to futureproof this by making max year dynamic so we save annual reports
 
 
