@@ -74,8 +74,8 @@ annestimates$fullspec<-fullnames[match(annestimates$species, SPECIES)]
 trendout$fullspec<-fullnames[match(trendout$species, SPECIES)]
 
 trendout<-trendout %>%
-  mutate(col=ifelse(lcl<0,ifelse(ucl<0,"darkred","black"),ifelse(ucl>0,"forestgreen","black"))) %>%
-  mutate(col=ifelse(species=="CAEL","darkred",col))
+  mutate(col=ifelse(lcl<0,ifelse(ucl<0,"darkred","black"),ifelse(ucl>0,"forestgreen","black"))) #%>%
+  #mutate(col=ifelse(species=="CAEL","darkred",col))
 
 gg <-annestimates %>% 
   mutate(Year = rep(2011:YEAR, times = length(unique(species)))) %>%
@@ -84,7 +84,8 @@ gg <-annestimates %>%
   
 
 ggplot()+
-geom_line(aes(x=Year, y=mean,col=col), size=1)+facet_wrap(~fullspec, ncol=2, scales="free_y")+
+geom_line(aes(x=Year, y=mean,col=col), size=1)+
+facet_wrap(~fullspec, ncol=2, scales="free_y")+
 geom_point(aes(x=Year, y=mean,col=col), size=2)+
 #geom_ribbon(data=annestimates,aes(x=Year, ymin=lower95CI,ymax=upper95CI),alpha=0.2)+
 geom_errorbar(aes(x=Year, ymin=lcl,ymax=ucl,col=col), width=.1) +
@@ -96,7 +97,7 @@ theme(legend.title = element_blank())+
 theme(legend.text = element_blank())+
 
 ## format axis ticks
-scale_x_continuous(name="Year", breaks=seq(2011,2023,2), labels=as.character(seq(2011,2023,2)))+
+scale_x_continuous(name="Year", breaks=seq(2011,YEAR,2), labels=as.character(seq(2011,YEAR,2)))+  ## futureproof output
 #scale_y_continuous(name="Number of Birds at 67 Sampling Points", breaks=seq(0,4000,500), labels=as.character(seq(0,4000,500)))+
   ylab(sprintf("Number of birds at %i sampling points",nsites)) +
   scale_color_manual(values = c("black","darkred", "forestgreen"))+
@@ -122,13 +123,13 @@ discernible trend direction).*
 <br> <br>
 
 ```{r  table2, echo=FALSE,warning=FALSE,error=FALSE,message=FALSE}
-table2<-trendout %>% filter(parameter == 'trend') %>% # I assume trend is the actual trend and not the estimate of detection prob
-  mutate(dir=ifelse(lcl<0,ifelse(ucl<0,"decrease","stable"),ifelse(ucl>0,"increase","stable"))) %>%
+table2<-trendout %>% filter(parameter %in% c('trend','trend2')) %>% # trend2 is the quadratic trend estimate
+  mutate(dir=ifelse(lcl<0,ifelse(ucl<0,"decrease","stable"),ifelse(ucl>0,"increase","stable"))) %>%  ## NEED TO ADJUST THIS FOR trend and trend2 separately: https://stats.oarc.ucla.edu/other/mult-pkg/faq/general/faqhow-do-i-interpret-the-sign-of-the-quadratic-term-in-a-polynomial-regression/
   mutate(conf=paste(round(mean, 2)," (",round(lcl,2)," - ",round(ucl,2),")", sep="")) %>%
   mutate(BayesP = round(BayesP,2)) %>%
     select(fullspec,dir,conf,BayesP)
 
-knitr::kable(table2, caption=paste0("Estimated trend of 12 forest bird species surveyed between 2011 and ", YEAR, " in the Centre Hills of Montserrat. Note that 'model fit' is assessed via a Bayesian p-value, which indicates poor model fit at values close to 0 and close to 1."),col.names=  c("Species","Direction", "Trend estimate", "Model fit"))
+knitr::kable(table2, caption=paste0("Estimated trend of 12 forest bird species surveyed between 2011 and ", YEAR, " in the Centre Hills of Montserrat. The model fits a linear (trend) and a quadratic (trend2) term on the population trend - this allows population change to be non-linear. If trend2 is positive, then the population went through a depression and is recovering, if trend2 is negative, the population initially increased but is now decreasing again. Note that 'model fit' is assessed via a Bayesian p-value, which indicates poor model fit at values close to 0 and close to 1."),col.names=  c("Species","Direction", "Trend estimate", "Model fit"))
 ```
 
 <br> <br>
