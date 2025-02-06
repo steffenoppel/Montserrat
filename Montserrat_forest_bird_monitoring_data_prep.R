@@ -146,9 +146,13 @@ obsCov %>% group_by(year, Point) %>% summarise(number_counts = length(Count)) %>
 
 # there are cases (23) where not all surveys were done in each year and point - include missing surveys by joining a df that includes all theoretically performed surveys to join with actual obsCov
 # create df with all surveys that should have been done each year for each point
-obsCov_theor <- data.frame(year = rep(2011:YEAR, each = length(siteCov$Point)), 
-                           Point = rep(siteCov$Point, each = 3, times = length(2011:YEAR)), 
-                           Count = rep(1:3, times = length(2011:YEAR)*length(siteCov$Point)))
+#obsCov_theor <- data.frame(year = rep(2011:YEAR, each = length(siteCov$Point)), 
+#                           Point = rep(siteCov$Point, each = 3, times = length(2011:YEAR)), 
+#                           Count = rep(1:3, times = length(2011:YEAR)*length(siteCov$Point)))
+
+obsCov_theor <- expand.grid(year = c(2011:YEAR), 
+                           Point = siteCov$Point, 
+                           Count = c(1:3))
 
 # calculate the number of obsCovs / surveys that should theoretically be done 
 length(siteCov$Point)*3*length(2011:YEAR) # this is the calculation where 2020 is still present (but no surveys were performed because of COVID)
