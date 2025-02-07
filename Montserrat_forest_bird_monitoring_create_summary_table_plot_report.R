@@ -17,7 +17,7 @@ library(rmarkdown)
 load(file = 'data/Montserrat_forest_bird_monitoring_yearly_NIMBLE_model_data.RData')
 
 # set YEAR appropriately - this will only work if the most recent year of data does not match the current year the workflow runs in 
-if(YEAR > max(obsCov$year)) {YEAR <- YEAR-1} 
+if(YEAR > max(obsCov$year, na.rm = T)) {YEAR <- YEAR-1} 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 2. Load in data from single models and create overview table with trends and annual estimates --------
