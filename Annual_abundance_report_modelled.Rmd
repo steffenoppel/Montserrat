@@ -24,8 +24,8 @@ at the beginning of the birds' breeding season in April. <br> <br>
 ### Forest bird monitoring in April and May `r YEAR`
 
 In `r YEAR`, we conducted point counts of all forest species between
-`r format(min(surveys$Date),format="%d %b")` and
-`r format(max(surveys$Date),format="%d %b")` and completed a total of
+`r format(min(surveys$Date, na.rm=T),format="%d %b")` and
+`r format(max(surveys$Date, na.rm=T),format="%d %b")` and completed a total of
 `r length(surveys$Time)` independent counts at
 `r length(unique(surveys$Point))` points in the forest, with three
 independent counts at each point. <br> <br>
@@ -33,7 +33,7 @@ independent counts at each point. <br> <br>
 ### Summary of raw observations in April and May `r YEAR`
 
 During each of the three survey rounds, we counted between
-`r min(totals$N)` and `r max(totals$N)` birds of
+`r min(totals$N, na.rm=T)` and `r max(totals$N, na.rm=T)` birds of
 `r min(totals$n_spec, na.rm=T)` to `r max(totals$n_spec, na.rm=T)`
 species across all `r length(unique(surveys$Point))` points. The
 observed number per species in each of the three survey rounds is shown
