@@ -64,7 +64,7 @@ trendout<-trendout %>%
   mutate(col=ifelse(lcl<0,ifelse(ucl<0,"darkred","black"),ifelse(ucl>0,"forestgreen","black"))) #%>%
   #mutate(col=ifelse(species=="CAEL","darkred",col))  ## this is a hack we should not need
 annestimates %>% 
-  mutate(Year=rep(seq(2011,YEAR), length(allout)-12)) %>%  ## need to futureproof this by making max year dynamic
+  mutate(Year=rep(seq(2011,YEAR), length(allout))) %>%  ## need to futureproof this by making max year dynamic
   filter(Year!=2020) %>%
   mutate(col = as.factor(trendout$col[match(species,trendout$species)])) %>%
   
