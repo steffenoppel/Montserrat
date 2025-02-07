@@ -17,7 +17,7 @@ rename <- dplyr::rename
 filter <- dplyr::filter
 
 # create year, choose species for analysis and select points that might cause isses for removing them 
-YEAR <- year(Sys.Date()) # set the most recent year 
+# YEAR <- year(Sys.Date()) # set the most recent year 
 SPECIES <- c('MTOR','FOTH','BRQD','TREM','ACHU','PTCA','PETH','GTCA','SBTH','SNPI','CAEL','BANA') # set species for which we actually want to conduct analysis 
 removal<-c(99,76)	# these are the two Points that cause error in JAGS, but here 
 
@@ -85,7 +85,7 @@ rm(list = setdiff(ls(), needed_objects)) # remove all unneeded objects
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # get an overview of what is set 
-YEAR # the most recent year data is available for 
+# YEAR # the most recent year data is available for 
 SPECIES # all species for which we want to prepare the data 
 removal # there are two points which might cause errors in JAGS, however, those are still included 
 
@@ -143,6 +143,9 @@ obsCov <- obsCov %>%
 
 # check if all surveys were done 
 obsCov %>% group_by(year, Point) %>% summarise(number_counts = length(Count)) %>% filter(number_counts != 3) %>% ungroup()
+
+# create variable YEAR as most recent year where data exists!
+YEAR <- max(obsCov$year) # there should not be any NAs
 
 # there are cases (23) where not all surveys were done in each year and point - include missing surveys by joining a df that includes all theoretically performed surveys to join with actual obsCov
 # create df with all surveys that should have been done each year for each point
