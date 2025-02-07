@@ -1,4 +1,4 @@
-#### Scrip for automaticall visualising and rendering the output from the Nmix models run in NIMBLE #####
+#### Script for automaticall visualising and rendering the output from the Nmix models run in NIMBLE #####
 #### this script is part of the automated workflow for an annual report for the Centre Hills Forest Bird Monitoring in Montserrat ####
 #### Script written by Filibert Heim, filibert.heim@posteo.de, in Nov 2024 with important parts of the script token and adapted from Steffen Oppel 
 
@@ -17,7 +17,7 @@ library(rmarkdown)
 load(file = 'data/Montserrat_forest_bird_monitoring_yearly_NIMBLE_model_data.RData')
 
 # set YEAR appropriately - this will only work if the most recent year of data does not match the current year the workflow runs in 
-if(YEAR > max(obsCov$year, na.rm = T)) {YEAR <- YEAR-1} 
+if(YEAR > max(obsCov$year, na.rm = T)) {YEAR <- YEAR-1}
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 2. Load in data from single models and create overview table with trends and annual estimates --------
@@ -62,7 +62,7 @@ trendout$fullspec<-fullnames[match(trendout$species, SPECIES)]
 # create a plot with abundance trends 
 trendout<-trendout %>%
   mutate(col=ifelse(lcl<0,ifelse(ucl<0,"darkred","black"),ifelse(ucl>0,"forestgreen","black"))) #%>%
-  #mutate(col=ifelse(species=="CAEL","darkred",col))  ## this is a hack we should not need
+#mutate(col=ifelse(species=="CAEL","darkred",col))  ## this is a hack we should not need
 annestimates %>% 
   mutate(Year=rep(seq(2011,YEAR), length(allout))) %>%  ## need to futureproof this by making max year dynamic
   filter(Year!=2020) %>%

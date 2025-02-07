@@ -13,6 +13,7 @@ library(data.table)
 library(tidyverse)
 library(ggplot2)
 library(knitr)
+library(kableExtra)
 ```
 
 The forests on Montserrat are home for two globally threatened forest
@@ -30,13 +31,9 @@ In `r YEAR`, we conducted point counts of all forest species between
 `r length(unique(surveys$Point))` points in the forest, with three
 independent counts at each point. <br> <br>
 
-### Summary of raw observations in April and May `r YEAR`
-
 During each of the three survey rounds, we counted between
-`r min(totals$N, na.rm=T)` and `r max(totals$N, na.rm=T)` birds of
-`r min(totals$n_spec, na.rm=T)` to `r max(totals$n_spec, na.rm=T)`
-species across all `r length(unique(surveys$Point))` points. The
-observed number per species in each of the three survey rounds is shown
+`r min(totals$N, na.rm=T)` and `r max(totals$N, na.rm=T)` birds across all `r length(unique(surveys$Point))` points. The
+observed number per species for the selected 12 most common species in each of the three survey rounds is shown
 in Table 1.
 
 ```{r  table1, echo=FALSE,warning=FALSE,error=FALSE,message=FALSE}
@@ -44,7 +41,7 @@ table1<-summary %>% spread(key=Count, value=N, fill = 0) %>%
   filter(!is.na(Species)) %>%
   mutate(Species=tblSpecies$Species[match(Species,tblSpecies$SpeciesCode)]) %>%
   arrange(desc(`1`))
-knitr::kable(table1, caption= paste0("Observed number of forest birds in the Centre Hills of Montserrat in April and May ", YEAR, " during three independent survey rounds."),col.names=  c("Species","Total N in round 1", "Total N in round 2", "Total N in round 3"))
+knitr::kable(table1, caption= paste0("Table 1: Observed number of forest birds in the Centre Hills of Montserrat in April and May ", YEAR, " during three independent survey rounds."),col.names=  c("Species","Total N in round 1", "Total N in round 2", "Total N in round 3"))
 ```
 
 <br> <br>
@@ -60,12 +57,7 @@ estimated number is less affected by temporal changes in weather or bird
 calling activity, and the estimated trend should not be affected by
 differences between observation conditions in different years.
 
-There is no indication that the two globally threatened species
-(Montserrat Oriole and Forest Thrush) have decreased since 2011, in
-fact, the Montserrat Oriole appears to have slightly increased. However,
-Green-throated Caribs appear to have been affected by the hurricanes in
-2017, and both Green-throated Caribs and Caribbean Elaenia have a
-long-term negative trend (Fig. 1, Table 2).
+The estimated population sizes for all species and years are shown in Figure 1, and the long-term trend estimates for all species are shown in Table 2.
 
 ```{r, echo=FALSE,warning=FALSE,error=FALSE,message=FALSE, fig.height = 13, fig.width = 16, fig.align = "center"}
 annestimates<-fread("output/Annual_estimates.csv")
@@ -114,7 +106,7 @@ gg
 
 ```
 
-*Figure 1: Estimated abundance of 12 forest bird species around 86 point
+*Figure 1: Estimated abundance of 12 forest bird species around `r length(unique(surveys$Point))` point
 count locations in the Center Hills of Montserrat since 2011. Species
 shown with green lines are increasing, species with red lines are
 decreasing, and species with black lines are stable (or have no
@@ -124,12 +116,16 @@ discernible trend direction).*
 
 ```{r  table2, echo=FALSE,warning=FALSE,error=FALSE,message=FALSE}
 table2<-trendout %>% filter(parameter %in% c('trend','trend2')) %>% # trend2 is the quadratic trend estimate
-  mutate(dir=ifelse(lcl<0,ifelse(ucl<0,"decrease","stable"),ifelse(ucl>0,"increase","stable"))) %>%  ## NEED TO ADJUST THIS FOR trend and trend2 separately: https://stats.oarc.ucla.edu/other/mult-pkg/faq/general/faqhow-do-i-interpret-the-sign-of-the-quadratic-term-in-a-polynomial-regression/
+  mutate(dir=ifelse(lcl<0,ifelse(ucl<0,"decrease","stable"),ifelse(ucl>0,"increase","stable"))) %>%  
+  mutate(dir=ifelse(parameter=="trend", dir,
+           ifelse(lcl<0,ifelse(ucl<0,"concave","flat"),ifelse(ucl>0,"convex","flat")))) %>%  ## ADJUST THIS FOR trend2 separately: https://stats.oarc.ucla.edu/other/mult-pkg/faq/general/faqhow-do-i-interpret-the-sign-of-the-quadratic-term-in-a-polynomial-regression/
   mutate(conf=paste(round(mean, 2)," (",round(lcl,2)," - ",round(ucl,2),")", sep="")) %>%
   mutate(BayesP = round(BayesP,2)) %>%
     select(fullspec,dir,conf,BayesP)
 
-knitr::kable(table2, caption=paste0("Estimated trend of 12 forest bird species surveyed between 2011 and ", YEAR, " in the Centre Hills of Montserrat. The model fits a linear (trend) and a quadratic (trend2) term on the population trend - this allows population change to be non-linear. If trend2 is positive, then the population went through a depression and is recovering, if trend2 is negative, the population initially increased but is now decreasing again. Note that 'model fit' is assessed via a Bayesian p-value, which indicates poor model fit at values close to 0 and close to 1."),col.names=  c("Species","Direction", "Trend estimate", "Model fit"))
+knitr::kable(table2, caption=paste0("Table 2: Estimated trend of 12 forest bird species surveyed between 2011 and ", YEAR, " in the Centre Hills of Montserrat. The model fits a linear (trend) and a quadratic (trend2) term on the population trend - this allows population change to be non-linear. If trend2 is positive, then the population went through a depression and is recovering, if trend2 is negative, the population initially increased but is now decreasing again. Note that 'model fit' is assessed via a Bayesian p-value, which indicates poor model fit at values close to 0 and close to 1."),col.names=  c("Species","Direction", "Trend estimate", "Model fit")) %>%
+  collapse_rows(columns = 1, valign = "middle") %>% 
+  kable_styling(bootstrap_options="striped",latex_options="scale_up")
 ```
 
 <br> <br>
