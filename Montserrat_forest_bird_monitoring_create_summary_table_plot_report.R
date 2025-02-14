@@ -11,6 +11,7 @@
 library(tidyverse)
 library(data.table) 
 library(rmarkdown)
+library(nimble)
 
 
 # load data which has been prepared in the script 'Montserrat_forest_bird_monitoring_data_prep_for_Nmix_nimble.R'
