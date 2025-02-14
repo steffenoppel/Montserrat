@@ -156,6 +156,9 @@ jobs: # define jobs
       - name: Set up Pandoc # install pandoc for rendering an rmd 
         uses: r-lib/actions/setup-pandoc@v2
 
+      - name: Install XQuartz # this seems to be needed on MacOS for a few graphical functions in R
+        run: brew install --cask xquartz
+
       - name: Install R dependencies 
         run: | 
           Rscript -e 'install.packages(c("tidyverse", "data.table", "rmarkdown", "knitr", "nimble"))' 
