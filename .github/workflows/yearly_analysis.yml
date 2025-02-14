@@ -158,7 +158,7 @@ jobs: # define jobs
 
       - name: Install R dependencies 
         run: | 
-          Rscript -e 'install.packages(c("tidyverse", "data.table", "rmarkdown", "knitr"))' 
+          Rscript -e 'install.packages(c("tidyverse", "data.table", "rmarkdown", "knitr", "nimble"))' 
           Rscript -e 'filter <- dplyr::filter; select <- dplyr::select; rename <- dplyr::rename'
 
       - name: Run general data preparation 
