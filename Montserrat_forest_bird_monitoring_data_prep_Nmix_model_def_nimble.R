@@ -1,6 +1,6 @@
 #### Scrip for data preparation for yearly Nmix models in NIMBLE #####
 #### this script is part of the automated workflow for an annual report for the Centre Hills Forest Bird Monitoring in Montserrat ####
-#### Script assembled by Filibert Heim, filibert.heim@posteo.de, in Nov 2024 but mainly takan and from a script from Steffen Oppel 
+#### Script assembled by Filibert Heim, filibert.heim@posteo.de, in Nov 2024 but mainly taken and from a script from Steffen Oppel 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 1. Preparations  --------
@@ -270,8 +270,8 @@ parameters.trend <- c("fit", "fit.new","trend","trend2","totalN","anndet")  #
 
 # MCMC settings
 # number of posterior samples per chain is n.iter - n.burnin
-n.iter <- 150000   #150000
-n.burnin <- 100000  #100000
+n.iter <- 1500   #150000
+n.burnin <- 1000  #100000
 n.chains <- 3
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
