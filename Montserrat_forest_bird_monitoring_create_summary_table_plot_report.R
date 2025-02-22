@@ -18,7 +18,7 @@ library(nimble)
 load(file = 'data/Montserrat_forest_bird_monitoring_yearly_NIMBLE_model_data.RData')
 
 # save YEAR as txt to make it available as environmental variable across steps
-cat(YEAR, "YEAR.txt")
+cat(YEAR, file = "YEAR.txt")
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 2. Load in data from single models and create overview table with trends and annual estimates --------
