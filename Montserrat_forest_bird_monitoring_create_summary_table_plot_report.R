@@ -62,7 +62,7 @@ trendout<-trendout %>%
 annestimates %>% 
   mutate(Year=rep(seq(2011,YEAR), length(allout))) %>%  ## need to futureproof this by making max year dynamic
   filter(Year!=2020) %>%
-  mutate(col = as.factor(trendout$col[match(species,trendout$species)])) %>% View()
+  mutate(col = as.factor(trendout$col[match(species,trendout$species)])) %>% 
   
   
   ggplot()+
