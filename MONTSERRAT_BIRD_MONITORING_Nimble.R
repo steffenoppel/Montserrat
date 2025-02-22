@@ -545,13 +545,13 @@ dev.off()
 # EXAMINE OUTPUT AND DIAGNOSTICS WITH MCMCvis
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-out<- as.data.frame(MCMCsummary(TRENDMOD$samples, params=c("trend","trend2","totalN","anndet")))
+out<- as.data.frame(MCMCsummary(TRENDMOD$samples, params=c("trend","trend2","totalN","anndet","N")))
 out$parameter<-row.names(out)
 out$species<-s
 out$BayesP<-mean(MCMCout$fit > MCMCout$fit.new)
 out$GoFSlope<-mean(MCMCout$fit) / mean(MCMCout$fit.new)
 names(out)[c(3,4,5)]<-c('lcl','median', 'ucl')
-fwrite(out,sprintf("output/%s_trend_estimates2024.csv",s))
+fwrite(out,sprintf("output/%s_trend_estimates2024_withN.csv",s))
 
 
 # MCMCplot(TRENDMOD$samples, params=c("trend","totalN","anndet"))
