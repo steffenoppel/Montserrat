@@ -17,6 +17,12 @@ library(tidyverse)
 library(data.table)
 library(dtplyr)
 library(dplyr)
+library(basemaps)  ### loads basemap in EPSG:3857 and therefore all other sf objects must be st_transform(3857)
+library(sf)
+library(terra)
+library("rnaturalearth")
+library("rnaturalearthdata")
+library(gridExtra)
 select <- dplyr::select
 rename <- dplyr::rename
 filter <- dplyr::filter
@@ -84,159 +90,30 @@ fwrite(mapdata,"Annual_estimates2024_mapdata.csv")
 
 
 
-
-
-
-
-
-
 ############################################################################################################
 ####   PRODUCE FIGURES FOR POPULATION TREND AND DETECTION PROBABILITY          #############################
 ############################################################################################################
 
-#setwd("S:/ConSci/DptShare/SteffenOppel/RSPB/Montserrat/Analysis/Population_status_assessment/AnnualMonitoring")
-setwd("C:\\STEFFEN\\RSPB\\Montserrat\\Analysis\\Population_status_assessment\\AnnualMonitoring")
-
-#annestimates<-read.table("Annual_estimates2017.csv", header=T, sep=",")
-#trendout<-read.table("Trend_estimates2017.csv", header=T, sep=",")
+mapdata_sf<-mapdata %>%
+  st_as_sf(coords = c("Eastings", "Northings"), crs=2004) %>%
+  st_transform(4326)                        ## Montserrat is EPSG 4604 or 2004
 
 
-annestimates$fullspec<-fullnames[match(annestimates$species, SPECIES)]
-trendout$fullspec<-fullnames[match(trendout$species, SPECIES)]
+# create bounding box
+bbox <- st_sfc(st_point(c(-62.25,16.68)), st_point(c(-62.1, 17.3)), crs = 4326) %>% st_bbox()
 
-
-
-################ PLOT FOR ABUNDANCE TREND ####################
-trendout<-trendout %>%
-  mutate(col=ifelse(lcl<0,ifelse(ucl<0,"darkred","black"),ifelse(ucl>0,"forestgreen","black"))) %>%
-  mutate(col=ifelse(species=="CAEL","darkred",col))
-annestimates %>% 
-  mutate(Year=rep(seq(2011,2024), length(allout))) %>%
-  filter(Year!=2020) %>%
-  mutate(col = as.factor(trendout$col[match(species,trendout$species)])) %>%
-  
-  
-  ggplot()+
-  geom_line(aes(x=Year, y=mean,col=col), linewidth=1)+
-  facet_wrap(~fullspec, ncol=2, scales="free_y")+
-  geom_point(aes(x=Year, y=mean,col=col), size=2)+
-  #geom_ribbon(data=annestimates,aes(x=Year, ymin=lcl,ymax=ucl),alpha=0.2)+
-  geom_errorbar(aes(x=Year, ymin=lcl,ymax=ucl,col=col), width=.1) +
-  
-  ## remove the legend
-  theme(legend.position="none")+
-  guides(scale="none",fill=FALSE)+
-  theme(legend.title = element_blank())+
-  theme(legend.text = element_blank())+
-  
-  ## format axis ticks
-  scale_x_continuous(name="Year", breaks=seq(2011,2023,2), labels=as.character(seq(2011,2023,2)))+
-  #scale_y_continuous(name="Number of Birds at 67 Sampling Points", breaks=seq(0,4000,500), labels=as.character(seq(0,4000,500)))+
-  ylab(sprintf("Number of birds at %i sampling points",nsites)) +
-  scale_color_manual(values = c("black","darkred", "forestgreen"))+
-  ## beautification of the axes
-  theme(panel.background=element_rect(fill="white", colour="black"), panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        axis.text=element_text(size=18, color="black"),
-        axis.title=element_text(size=18),
-        strip.text.x=element_text(size=18, color="black"),
-        axis.title.y=element_text(margin=margin(0,20,0,0)),
-        strip.background=element_rect(fill="white", colour="black"))
-
-ggsave("Montserrat_ForestBird_Trends_2024.pdf", width=13, height=16)
+# extract tiles - check the provider argument, there are many options
+basemap <- maptiles::get_tiles(x = bbox, 
+                               zoom = 12,
+                               crop = TRUE, provider = "OpenTopoMap")
 
 
 
-
-
-
-######################################################################################
-#############  PROVIDE BASIC SUMMARY REPORT FOR ANNUAL NEWS ARTICLE        ##################
-######################################################################################
-
-
-surveys2024<-obsCov %>% filter(year==2024)
-birds2024<-countdata %>% filter(year==2024) %>% select(-Time,-Rain,-Wind,-day,-time,-activity,-Date,-Time,-VisitID) %>%
-  gather(key=Species, value=N, -year,-Point,-Count) %>%
-  mutate(Point=as.integer(as.character(Point)))
-summary2024<-surveys2024 %>% select(year, Point, Count, Date) %>%
-  left_join(birds2024, by=c('year','Point','Count')) %>%
-  group_by(Count, Species) %>%
-  summarise(N=sum(N, na.rm=T))
-
-totals2024<-summary2024 %>% group_by(Count) %>%
-  summarise(N=sum(N), n_spec=length(unique(Species)))
-
-table1<-summary2024 %>% spread(key=Count, value=N, fill = 0) %>%
-  filter(!is.na(Species)) %>%
-  mutate(Species=species$Species[match(Species,species$SpeciesCode)]) %>%
-  arrange(desc(`1`))
-
-table2<-trendout %>%
-  mutate(dir=ifelse(lcl<0,ifelse(ucl<0,"decrease","stable"),ifelse(ucl>0,"increase","stable"))) %>%
-  mutate(dir=ifelse(species=="CAEL","(decrease)",dir)) %>%
-  mutate(conf=paste(round(mean,3)," (",round(lcl,3)," - ",round(ucl,3),")", sep="")) %>%
-  select(fullspec,dir,conf,BayesP,Rhat) %>%
-  arrange(desc(BayesP))
-
-
-
-######################################################################################
-#############  SIMPLE plot for the key species     ########################
-######################################################################################
-
-### ALTERNATIVE IF MODELS DO NOT CONVERGE
-
-# ggplot()+
-#   geom_line(data=summary, aes(x=Year, y=mean), linewidth=1)+
-#   facet_wrap(~Species, ncol=2, scales="free_y")+
-#   geom_point(data=summary, aes(x=Year, y=mean), size=1.5,col='black')+
-#   #geom_ribbon(data=annestimates,aes(x=Year, ymin=lower95CI,ymax=upper95CI),alpha=0.2)+
-#   geom_errorbar(data=summary,aes(x=Year, ymin=(mean-0.5*sd),ymax=(mean+0.5*sd)), colour="black", width=.1) +
-#
-#   ## remove the legend
-#   theme(legend.position="none")+
-#   guides(fill=FALSE)+
-#   theme(legend.title = element_blank())+
-#   theme(legend.text = element_blank())+
-#
-#   ## format axis ticks
-#   scale_x_continuous(name="Year", breaks=seq(2011,2023,1), labels=as.character(seq(2011,2023,1)))+
-#   #scale_y_continuous(name="Number of Birds at 67 Sampling Points", breaks=seq(0,4000,500), labels=as.character(seq(0,4000,500)))+
-#   ylab("Number of Birds per Sampling Point") +
-#
-#   ## beautification of the axes
-#   theme(panel.background=element_rect(fill="white", colour="black"), panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-#         axis.text=element_text(size=18, color="black"),
-#         axis.title=element_text(size=18),
-#         strip.text.x=element_text(size=18, color="black"),
-#         axis.title.y=element_text(margin=margin(0,20,0,0)),
-#         strip.background=element_rect(fill="white", colour="black"))
-
-
-
-
-######## THIS WILL ONLY WORK ONCE THE ANNUAL MODELS HAVE BEEN RUN ##
-
-# annestimates<-read.table("Annual_estimates2023.csv", header=T, sep=",")
-# fullnames<-c("Montserrat Oriole", "Forest Thrush", "Bridled Quail-Dove", "Brown Trembler","Antillean Crested Hummingbird","Purple-throated Carib","Pearly-eyed Thrasher","Green-throated Carib","Scaly-breasted Thrasher",
-# 			"Scaly-naped Pigeon","Caribbean Elaenia", "Bananaquit")
-# annestimates$fullspec<-fullnames[match(annestimates$species, SPECIES)]
-
-### create HTML report for overall summary report
-Sys.setenv(RSTUDIO_PANDOC="C:/Users/Inge Oppel/AppData/Local/Pandoc")
-# Sys.setenv(RSTUDIO_PANDOC="C:/Program Files/RStudio/bin/pandoc")
-#
-rmarkdown::render('C:\\STEFFEN\\OneDrive - THE ROYAL SOCIETY FOR THE PROTECTION OF BIRDS\\STEFFEN\\RSPB\\UKOT\\Montserrat\\Analysis\\Population_status_assessment\\AnnualMonitoring\\Annual_abundance_report.Rmd',
-                  output_file = "Montserrat_ForestBird_AnnualSummary2024.html",
-                  output_dir = 'C:\\STEFFEN\\OneDrive - THE ROYAL SOCIETY FOR THE PROTECTION OF BIRDS\\STEFFEN\\RSPB\\UKOT\\Montserrat\\Analysis\\Population_status_assessment\\AnnualMonitoring')
-
-rmarkdown::render('C:\\Users\\sop\\Documents\\Steffen\\RSPB\\Montserrat\\Annual_abundance_report_modelled.Rmd',
-                  output_file = "Montserrat_ForestBird_AnnualSummary2024.html",
-                  output_dir = 'C:\\Users\\sop\\Documents\\Steffen\\RSPB\\Montserrat')
-
-
-
-
+tmap_mode("view")
+tm_shape(basemap)+
+  tm_rgb()+
+  tm_shape(mapdata_sf)  +
+  tm_symbols(col = "red", size = 0.2)
 
 
 
