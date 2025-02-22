@@ -17,6 +17,9 @@ library(nimble)
 # load data which has been prepared in the script 'Montserrat_forest_bird_monitoring_data_prep_for_Nmix_nimble.R'
 load(file = 'data/Montserrat_forest_bird_monitoring_yearly_NIMBLE_model_data.RData')
 
+# save YEAR as txt to make it available as environmental variable across steps
+cat(YEAR, file = "YEAR.txt")
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 2. Load in data from single models and create overview table with trends and annual estimates --------
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -62,7 +65,7 @@ trendout<-trendout %>%
 annestimates %>% 
   mutate(Year=rep(seq(2011,YEAR), length(allout))) %>%  ## need to futureproof this by making max year dynamic
   filter(Year!=2020) %>%
-  mutate(col = as.factor(trendout$col[match(species,trendout$species)])) %>% View()
+  mutate(col = as.factor(trendout$col[match(species,trendout$species)])) %>% 
   
   
   ggplot()+
