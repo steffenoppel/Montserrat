@@ -169,7 +169,6 @@ jobs: # define jobs
 
       - name: Get YEAR variable # to only push these files with the correct YEAR
         run: |
-          Rscript -e "cat('YEAR', file = 'YEAR.txt')"
           echo "YEAR=$(cat YEAR.txt)" >> $GITHUB_ENV # get YEAR from txt file as object in git environment
 
       - name: Configure git # this code is needed to make the created RData with all prepared data in the workflow available in the repo outside any git actions 
