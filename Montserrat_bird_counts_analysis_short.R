@@ -23,9 +23,9 @@ SPECIES <- c('MTOR','FOTH','BRQD','TREM','ACHU','PTCA','PETH','GTCA','SBTH',
 ###### 2.1: load the prepared data and make last preparation #####
 
 # load prepared data from Steffen 
-setwd('C:/Users/sop/Documents/Steffen/RSPB/Montserrat')
+setwd('C:/Users/sop/Documents/Steffen/RSPB/Montserrat/data')
 
-load(file = 'MONTSERRAT_ANNUAL_DATA_INPUT2023.RData')
+load(file = 'MONTSERRAT_ANNUAL_DATA_INPUT2024.RData')
 filter<-dplyr::filter
 select<-dplyr::select
 rename<-dplyr::rename
@@ -56,6 +56,19 @@ head(table1) # I don't really know what kind of data this data.frame contains
 head(totals2023) # I don't really know what kind of data this data.frame contains
 print(y) # last recent year 
 head(rain_y)
+
+#### calculate % occurrence
+countdata %>% select(-VisitID,-Date,-Time,-Rain,-Wind,-day,-time,-activity) %>%
+  filter(year!=2020) %>%
+  gather(key="Species", value="occ",-year,-Point,-Count) %>%
+  group_by(Species,Point,year) %>%
+  summarise(N=max(occ, na.rm=T)) %>%
+  mutate(N=ifelse(N>0,1,0)) %>%
+  ungroup() %>%
+  group_by(Species,year) %>%
+  summarise(occ=mean(N)) %>%
+  spread(key=year,value=occ)
+  
 
 ###### 2.3: relable variate names/columns #####
 
