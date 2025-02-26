@@ -1,0 +1,211 @@
+---
+title: "Montserrat Forest Bird Monitoring - Annual Summary"
+author: "Department of Environment / RSPB"
+output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,warning=FALSE,error=FALSE,message=FALSE)
+library(data.table)
+library(tidyverse)
+library(ggplot2)
+library(knitr)
+library(kableExtra)
+library(tmap)
+library(basemaps)  ### loads basemap in EPSG:3857 and therefore all other sf objects must be st_transform(3857)
+library(sf)
+```
+
+The forests on Montserrat are home for two globally threatened forest
+bird species, the endemic Montserrat Oriole and the Forest Thrush. Since
+1999 the Department of Environment and the RSPB have counted the forest
+birds in the Center Hills along 11 survey routes at least once per year
+at the beginning of the birds' breeding season in April. <br> <br>
+
+### Forest bird monitoring in April and May `r YEAR`
+
+In `r YEAR`, we conducted point counts of all forest species between
+`r format(min(surveys$Date, na.rm=T),format="%d %b")` and
+`r format(max(surveys$Date, na.rm=T),format="%d %b")` and completed a total of
+`r length(surveys$Time)` independent counts at
+`r length(unique(surveys$Point))` points in the forest, with three
+independent counts at each point. <br> <br>
+
+During each of the three survey rounds, we counted between
+`r min(totals$N, na.rm=T)` and `r max(totals$N, na.rm=T)` birds across all `r length(unique(surveys$Point))` points. The
+observed number per species for the selected 12 most common species in each of the three survey rounds is shown
+in Table 1.
+
+```{r  table1, echo=FALSE,warning=FALSE,error=FALSE,message=FALSE}
+table1<-summary %>% spread(key=Count, value=N, fill = 0) %>%
+  filter(!is.na(Species)) %>%
+  mutate(Species=species$Species[match(Species,species$SpeciesCode)]) %>%
+  arrange(desc(`1`))
+
+knitr::kable(table1, caption= paste0("Table 1: Observed number of forest birds in the Centre Hills of Montserrat in April and May ", YEAR, " during three independent survey rounds."),col.names=  c("Species","Total N in round 1", "Total N in round 2", "Total N in round 3"))
+```
+
+<br> <br>
+
+### Estimate of forest bird trends on Montserrat since 2011
+
+Since the survey design with three repeated counts at each point was
+introduced in 2011, we use binomial mixture models to estimate the
+abundance of birds around all survey points, and the long term trend
+across years. The three repeated visits allow us to estimate what
+proportion of birds were not seen during the surveys, so that the
+estimated number is less affected by temporal changes in weather or bird
+calling activity, and the estimated trend should not be affected by
+differences between observation conditions in different years.
+
+The estimated population sizes for all species and years are shown in Figure 1, and the long-term trend estimates for all species are shown in Table 2.
+
+```{r, echo=FALSE,warning=FALSE,error=FALSE,message=FALSE, fig.height = 13, fig.width = 16, fig.align = "center"}
+
+gg <-annestimates %>% 
+  filter(Year!=2020) %>%
+  mutate(col = as.factor(trendout$col[match(species,trendout$species)])) %>%
+  
+ggplot()+
+	geom_line(aes(x=Year, y=mean,col=col), linewidth=1)+
+	facet_wrap(~fullspec, ncol=2, scales="free_y")+
+geom_point(aes(x=Year, y=mean,col=col), size=2)+
+#geom_ribbon(data=annestimates,aes(x=Year, ymin=lcl,ymax=ucl),alpha=0.2)+
+geom_errorbar(aes(x=Year, ymin=lcl,ymax=ucl,col=col), width=.1) +
+
+## remove the legend
+theme(legend.position="none")+
+guides(scale="none",fill=FALSE)+
+theme(legend.title = element_blank())+
+theme(legend.text = element_blank())+
+
+## format axis ticks
+scale_x_continuous(name="Year", breaks=seq(2011,YEAR,2), labels=as.character(seq(2011,YEAR,2)))+
+#scale_y_continuous(name="Number of Birds at 67 Sampling Points", breaks=seq(0,4000,500), labels=as.character(seq(0,4000,500)))+
+  ylab(sprintf("Number of birds at %i sampling points",nsites)) +
+  scale_color_manual(values = c("black","darkred", "forestgreen"))+
+## beautification of the axes
+  theme(panel.background=element_rect(fill="white", colour="black"), panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        axis.text=element_text(size=18, color="black"),
+        axis.title=element_text(size=18),
+        strip.text.x=element_text(size=18, color="black"),
+	  axis.title.y=element_text(margin=margin(0,20,0,0)),
+        strip.background=element_rect(fill="white", colour="black"))
+
+gg
+
+
+```
+
+*Figure 1: Estimated abundance of 12 forest bird species around `r length(unique(surveys$Point))` point
+count locations in the Center Hills of Montserrat since 2011. Species
+shown with green lines are increasing, species with red lines are
+decreasing, and species with black lines are stable (or have no
+discernible trend direction).*
+
+<br> <br>
+
+```{r  table2, echo=FALSE,warning=FALSE,error=FALSE,message=FALSE}
+table2<-trendout %>% filter(parameter %in% c('trend','trend2')) %>% # trend2 is the quadratic trend estimate
+  mutate(dir=ifelse(lcl<0,ifelse(ucl<0,"decrease","stable"),ifelse(ucl>0,"increase","stable"))) %>%  
+  mutate(dir=ifelse(parameter=="trend", dir,
+           ifelse(lcl<0,ifelse(ucl<0,"concave","flat"),ifelse(ucl>0,"convex","flat")))) %>%  ## ADJUST THIS FOR trend2 separately: https://stats.oarc.ucla.edu/other/mult-pkg/faq/general/faqhow-do-i-interpret-the-sign-of-the-quadratic-term-in-a-polynomial-regression/
+  mutate(conf=paste(round(mean, 2)," (",round(lcl,2)," - ",round(ucl,2),")", sep="")) %>%
+  mutate(BayesP = round(BayesP,2)) %>%
+    select(fullspec,dir,conf,BayesP)
+
+knitr::kable(table2, caption=paste0("Table 2: Estimated trend of 12 forest bird species surveyed between 2011 and ", YEAR, " in the Centre Hills of Montserrat. The model fits a linear (trend) and a quadratic (trend2) term on the population trend - this allows population change to be non-linear. If trend2 is positive, then the population went through a depression and is recovering, if trend2 is negative, the population initially increased but is now decreasing again. Note that 'model fit' is assessed via a Bayesian p-value, which indicates poor model fit at values close to 0 and close to 1."),col.names=  c("Species","Direction", "Trend estimate", "Model fit")) %>%
+  collapse_rows(columns = 1, valign = "middle") %>% 
+  kable_styling(bootstrap_options="striped",latex_options="scale_up")
+```
+
+<br> <br>
+
+
+### Spatial distribution of forest birds in the Centre Hills
+
+Because we estimate the abundance of birds around each of the points where we count birds, we can create spatial maps to show where which species and how many birds occur in the Centre Hills forest. The maps below are just examples of what can be shown in this report - please let us know other maps that you would like to be shown.
+
+
+The first map shows the abundance of all `r length(fullnames)` species in the Centre Hills.
+
+```{r abundmap, echo=FALSE,warning=FALSE,error=FALSE,message=FALSE, fig.height = 13, fig.width = 16, fig.align = "center"}
+
+abundance_sf<-mapdata_sf %>%
+  filter(Year==YEAR) %>%
+  group_by(Point, geometry) %>%
+  summarise(N=sum(median))
+
+tmap_mode("view")
+tm_basemap(c(StreetMap = "OpenStreetMap",
+             TopoMap = "OpenTopoMap")) +
+  # tm_shape(basemap)+
+  #   tm_rgb()+
+  tm_shape(abundance_sf)  +
+  tm_symbols(col="N", palette = c("lightgreen", "darkred"),
+             size=0.8, alpha=0.7,
+             title.col = "Total N")
+  
+
+```
+
+*Figure 2: Estimated mean abundance of `r length(fullnames)` forest bird species around `r length(unique(surveys$Point))` point
+count locations in the Center Hills of Montserrat in `r YEAR`.*
+
+
+
+We can also show the number of species recorded, or the change in the recorded species richness over time.
+
+```{r richmap, echo=FALSE,warning=FALSE,error=FALSE,message=FALSE, fig.height = 13, fig.width = 16, fig.align = "center"}
+
+richness_sf<-mapdata_sf %>%
+  filter(lcl>0) %>%
+  group_by(Year, Point, geometry) %>%
+  summarise(Nspec=length(unique(species))) %>%
+  ungroup() %>%
+  group_by(Point, geometry) %>%
+  summarise(Nchange=max(Nspec)-min(Nspec))
+
+
+tm_basemap(c(StreetMap = "OpenStreetMap",
+             TopoMap = "OpenTopoMap")) +
+  tm_shape(richness_sf)  +
+  tm_symbols(col="Nchange", palette = c("lightgreen", "darkred"),
+             size=0.5, alpha=0.7,
+             title.col = "Change in species richness")
+  
+
+```
+
+*Figure 3: Estimated maximum change in the number of `r length(fullnames)` forest bird species that were present at each point between 2011 and `r YEAR`.*
+
+<br> <br>
+
+Finally, we can also show the number of birds of a single species in a single year, and we could simply append many such plots for each species in each year.
+
+```{r specmap, echo=FALSE,warning=FALSE,error=FALSE,message=FALSE, fig.height = 13, fig.width = 16, fig.align = "center"}
+
+specdata_sf<-mapdata_sf %>%
+  filter(Year==YEAR) %>%
+  filter(species=="MTOR") %>%
+  group_by(Point, geometry) %>%
+  summarise(N=sum(median), conf=(1/(ucl-lcl))+1)
+
+
+tmap_mode("view")
+tm_basemap(c(StreetMap = "OpenStreetMap",
+             TopoMap = "OpenTopoMap")) +
+  tm_shape(specdata_sf)  +
+  tm_symbols(col="N", palette = c("lightgreen", "darkred"),
+             size=1, alpha=0.7,
+             title.col = "MTOR")
+
+
+```
+
+*Figure 4: Estimated abundance of Montserrat Orioles in the Centre Hills in `r YEAR`.*
+
+<br> <br>
