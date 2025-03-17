@@ -125,7 +125,7 @@ geom_errorbar(aes(x=Year, ymin=lcl,ymax=ucl,col=col), width=.1) +
 
 ## remove the legend
 theme(legend.position="none")+
-guides(scale="none",fill=FALSE)+
+guides(scale="none",fill="none")+
 theme(legend.title = element_blank())+
 theme(legend.text = element_blank())+
 
