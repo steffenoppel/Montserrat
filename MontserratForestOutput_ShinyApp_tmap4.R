@@ -8,6 +8,10 @@
 ### REQUIRES ANALYIS TO BE COMPLETED IN  "MONTSERRAT_BIRD_MONITORING_Nimble.R"
 
 
+
+## THIS APP DOES NOT WORK DUE TO A PROBLEM IN tmap v4: https://github.com/r-tmap/tmap/issues/1024
+
+
 #.....................................................................................
 # 1.  Load required packages       ---------------------
 #.....................................................................................
