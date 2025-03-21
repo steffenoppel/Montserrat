@@ -169,22 +169,26 @@ tm_basemap(c(StreetMap = "OpenStreetMap",
 
 ### SINGLE SPECIES MAPS ####
 
-specdata_sf<-mapdata_sf %>%
+abundance_sf<-mapdata_sf %>%
   filter(Year==max(Year)) %>%
   filter(species=="MTOR") %>%
   group_by(Point, geometry) %>%
-  summarise(N=sum(median), conf=(1/(ucl-lcl))+1)
+  summarise(N = sum(median), lcl = sum(lcl), ucl = sum(ucl)) %>%
+  mutate(Total = paste0(N, " [", lcl, "-", ucl, "]")) %>%
+  select(Point, N, Total)
 
 
-tmap_mode("view")
-tm_basemap(c(StreetMap = "OpenStreetMap",
-             TopoMap = "OpenTopoMap")) +
-  # tm_shape(basemap)+
-  #   tm_rgb()+
-  tm_shape(specdata_sf)  +
-  tm_symbols(col="N", palette = c("lightgreen", "darkred"),
-             size=1, alpha=0.7,
-             title.col = "MTOR")
+tm_basemap(c(StreetMap = "OpenStreetMap", TopoMap = "OpenTopoMap")) +
+  tm_shape(abundance_sf) +
+  tm_symbols(
+    col= "darkgray",
+    fill = "N",
+    fill.scale=tm_scale(values=c("lightgreen", "darkred")),
+    size = 0.8,
+    fill_alpha = 0.7,
+    fill.legend=tm_legend("Estimated number"),
+    popup.vars = c("Total")
+  )
 
 
 
