@@ -6,6 +6,7 @@
 # 1. Preparations  --------
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+rm(list=ls())
 # load packages 
 library(tidyverse)
 library(data.table)

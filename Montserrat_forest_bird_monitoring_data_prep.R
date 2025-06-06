@@ -1,14 +1,14 @@
-#### Scrip for data preparation for yearly analysis - brings together data from database and new data from SURVEY123 #####
+#### Script for data preparation for yearly analysis - brings together data from database and new data from SURVEY123 #####
 #### this script is part of the automated workflow for an annual report for the Centre Hills Forest Bird Monitoring in Montserrat ####
 #### Script written by Filibert Heim, filibert.heim@posteo.de, in Nov 2024 with important parts of the script token and adapted from Steffen Oppel 
 
 # at point 6. Prepare siteCovs you can include additional environmental/habitat variables as siteCovs!
-# yearly data preparation workflow for all sort of analysis is implemented until line 250 where this data is exproted (the further code is preparation for yearly N-mix models in NIMBLE)
+# yearly data preparation workflow for all sort of analysis is implemented until line 250 where this data is exported (the further code is preparation for yearly N-mix models in NIMBLE)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 1. Preparations  --------
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+rm(list=ls())
 # load packages
 library(tidyverse) 
 library(data.table)
@@ -65,6 +65,110 @@ impBirdData <- import %>% select(2,11:53) %>%
   rename(Species=SpeciesCode) %>%
   filter(!is.na(VisitID)) 
 head(impBirdData)
+
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 3.1. TROUBLESHOOT AND WEED OUT ERRORS WITH POINT LABEL--------
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+### FIND POINTS WITH ><3 counts
+
+impVisit %>% group_by(year,Point,Count) %>%
+  summarise(n=length(unique(Time))) %>%
+  filter(n>1)
+
+
+### FIND POINTS WITH ><3 counts
+
+CheckErrors<-impVisit %>% group_by(year,Route,Point) %>%
+  summarise(n=length(unique(Time))) %>%
+  filter(n!=3) %>%
+  mutate(Problem=ifelse(n>3,"TooMany","TooFew")) %>%
+  arrange(desc(Problem))
+
+for(l in 1:dim(CheckErrors[CheckErrors$Problem=="TooMany",])[1]){
+  
+  ## go through case by case and find points with >3 visits
+  case<-impVisit %>% filter(year==CheckErrors$year[l],Point==CheckErrors$Point[l])
+  
+  ## identify the duplicate
+  duplicates<-case %>% group_by(year,Route,Point,Date) %>%
+    summarise(n=length(VisitID)) %>%
+    filter(n>1)
+  
+  ## duplicate VisitIDs
+  dupIDs<-case %>% filter(Date==duplicates$Date, Point==duplicates$Point)
+  
+  ## check whether there is a missing count on the same route and day
+  pot.missing<-CheckErrors %>% filter(Problem=="TooFew") %>%
+    filter(Route==duplicates$Route)
+  
+  ## check whether the missing count is usually before or after the duplicate count
+  check_sequence<-impVisit %>% filter(year==CheckErrors$year[l],Point %in% c(duplicates$Point,pot.missing$Point)) %>%
+    arrange(Count,Time) %>%
+    group_by(Count) %>%
+    mutate(SEQ=seq_along(Time)) %>%
+    ungroup() %>%
+    filter(Point %in% c(pot.missing$Point)) %>%
+    summarise(seq=min(SEQ))
+      
+  
+  ## CHANGE THE POINT NUMBER IN THE VISIT DATA
+  
+  impVisit$Point[impVisit$VisitID %in% dupIDs$VisitID][check_sequence$seq]<-pot.missing$Point
+  
+}
+
+
+
+### TEST WHETHER IT HAS WORKED
+
+impVisit %>% group_by(year,Route,Point) %>%
+  summarise(n=length(unique(Time))) %>%
+  filter(n!=3) %>%
+  mutate(Problem=ifelse(n>3,"TooMany","TooFew")) %>%
+  arrange(desc(Problem))
+
+
+
+
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 3.2. TROUBLESHOOT AND WEED OUT ERRORS WITH COUNT NUMBER--------
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+### FIND POINTS WITH incomplete set of 'counts'
+
+CheckErrors<-impVisit %>% group_by(year,Route,Point) %>%
+  summarise(n=length(unique(Count))) %>%
+  filter(n<3)
+
+
+for(l in 1:dim(CheckErrors)[1]){
+  
+  ## go through case by case and create sequential count
+  case<-impVisit %>% filter(year==CheckErrors$year[l],Point==CheckErrors$Point[l]) %>%
+    arrange(Time) %>%
+    mutate(NEWCount=seq_along(Time))
+  
+  ## CHANGE THE COUNT NUMBER IN THE VISIT DATA
+    impVisit$Count[match(case$VisitID,impVisit$VisitID)]<-case$NEWCount
+  
+}
+
+
+
+### TEST WHETHER IT HAS WORKED
+impVisit %>% group_by(year,Route,Point) %>%
+  summarise(n=length(unique(Count))) %>%
+  filter(n<3)
+
+
+
+
+
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 4. Combine new data from Survey123 and data until 2024 --------
