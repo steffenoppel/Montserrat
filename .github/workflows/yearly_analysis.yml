@@ -44,7 +44,7 @@ jobs: # define jobs
       - name: Commit changes to git repository 
         run: |
           git add data/MONTSERRAT_ANNUAL_DATA_INPUT.RData
-          git commit -m "Automatically in git actions prepared data from Montserrat Forest Monitoring for any analysis" || echo "No changes to commit" # the echo ensures that even if there are no changes, and no commit is performed, the workflow wont fail
+          git commit -m "Automatically prepared data for Montserrat Forest Monitoring analysis" || echo "No changes to commit" # the echo ensures that even if there are no changes, and no commit is performed, the workflow wont fail
 
       - name: Pull latest changes from main
         run: |
@@ -53,7 +53,7 @@ jobs: # define jobs
           
       - name: Push changes to the repository
         env: 
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT_Montserrat }}
         run: |
           git push origin HEAD:main
 
