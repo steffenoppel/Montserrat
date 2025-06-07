@@ -132,7 +132,7 @@ jobs: # define jobs
           
       - name: Push changes to the repository
         env: 
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT_Montserrat }}
         run: |
           git push origin HEAD:main
 
@@ -194,7 +194,7 @@ jobs: # define jobs
           
       - name: Push changes to the repository
         env: 
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT_Montserrat }}
         run: |
           git push origin HEAD:main
 
