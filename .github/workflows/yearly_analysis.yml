@@ -85,7 +85,7 @@ jobs: # define jobs
 
   job_run_Nmix_model:
     runs-on: macos-latest 
-    needs: job_data_preparation_nimble
+  #  needs: job_data_preparation_nimble
     strategy:
       matrix: # starts a matrix process where multiple jobs (one for each species) run simultaneously 
         SPECIES: ["MTOR", "FOTH", "BRQD", "TREM", "ACHU", "PTCA", "PETH", "GTCA", "SBTH", "SNPI", "CAEL", "BANA"] # set all species for which this job aka running the Nmix model in NIMBLE should be performed
