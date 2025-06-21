@@ -11,81 +11,81 @@ on:
   workflow_dispatch:  # This allows manual triggering of the workflow
  
 jobs: # define jobs
-  # job_data_preparation: # set the name of a below defined job ## COMMENTED OUT BECAUSE NOT POSSIBLE TO AUTOMATE
-  #   runs-on: macos-latest # set Environment for the job, here use windows as the virtual machine environment 
-  # 
-  #   steps: 
-  #     - name: Checkout repository # provide a name for this step within the job
-  #       uses: actions/checkout@v3
-  #       
-  #     - name: Set up R environment
-  #       uses: r-lib/actions/setup-r@v2
-  #         
-  #     - name: Install R dependencies 
-  #       run: | 
-  #         Rscript -e 'install.packages(c("tidyverse", "data.table"))' 
-  # 
-  #         Rscript -e 'filter <- dplyr::filter; select <- dplyr::select; rename <- dplyr::rename'
-  # 
-  #     - name: Install pkg-config and pkgconf silently # this is solely a step to overcome issues with lots of annoying but non fatal and distractive error messages 
-  #       run: |
-  #         brew install pkg-config || true
-  #         export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1
-  #         brew install pkgconf || true
-  # 
-  #     - name: Run data preparation for Nmix models in NIMBLE
-  #       run: Rscript 'Montserrat_forest_bird_monitoring_data_prep.R' 
-  # 
-  #     - name: Configure git # this code is needed to make the created RData with all prepared data in the workflow available in the repo outside any git actions 
-  #       run: |
-  #         git config --global user.name "github-actions[bot]" 
-  #         git config --global user.email "github-actions[bot]@users.noreply.github.com"
-  # 
-  #     - name: Commit changes to git repository 
-  #       run: |
-  #         git add data/MONTSERRAT_ANNUAL_DATA_INPUT.RData
-  #         git commit -m "Automatically prepared data for Montserrat Forest Monitoring analysis" || echo "No changes to commit" # the echo ensures that even if there are no changes, and no commit is performed, the workflow wont fail
-  # 
-  #     - name: Pull latest changes from main
-  #       run: |
-  #         git fetch origin main
-  #         git merge --no-edit origin/main
-  #         
-  #     - name: Push changes to the repository
-  #       env: 
-  #         GITHUB_TOKEN: ${{ secrets.PAT_Montserrat }}
-  #       run: |
-  #         git push origin HEAD:main
-  # 
-  # job_data_preparation_nimble: # start another job
-  #   runs-on: macos-latest
-  #   needs: job_data_preparation # set dependency to first job because the output of this job is needed for the current one 
-  #   
-  #   steps:
-  #     - name: Checkout repository # provide a name for this step within the job
-  #       uses: actions/checkout@v3
-  # 
-  #     - name: Set up R environment
-  #       uses: r-lib/actions/setup-r@v2
-  # 
-  #     - name: Install R dependencies 
-  #       run: | 
-  #         Rscript -e 'install.packages(c("tidyverse", "data.table", "nimble"))' 
-  #         Rscript -e 'filter <- dplyr::filter; select <- dplyr::select; rename <- dplyr::rename'
-  # 
-  #     - name: Run general data preparation 
-  #       run: Rscript 'Montserrat_forest_bird_monitoring_data_prep_Nmix_model_def_nimble.R' # run RScript to prepare data for Nmix models in NIMBLE
-  # 
-  #     - name: Pass prepared data and defined model to next job # using artifacts 
-  #       uses: actions/upload-artifact@v4
-  #       with: 
-  #         name: prepared data and defined NIMBLE model 
-  #         path: data/Montserrat_forest_bird_monitoring_yearly_NIMBLE_model_data.RData
-  #         retention-days: 1 # this sets the time for how long the artifact is saved under the artifact link
+  job_data_preparation: # set the name of a below defined job ## COMMENTED OUT BECAUSE NOT POSSIBLE TO AUTOMATE
+    runs-on: macos-latest # set Environment for the job, here use windows as the virtual machine environment
+
+    steps:
+      - name: Checkout repository # provide a name for this step within the job
+        uses: actions/checkout@v3
+
+      - name: Set up R environment
+        uses: r-lib/actions/setup-r@v2
+
+      - name: Install R dependencies
+        run: |
+          Rscript -e 'install.packages(c("tidyverse", "data.table"))'
+
+          Rscript -e 'filter <- dplyr::filter; select <- dplyr::select; rename <- dplyr::rename'
+
+      - name: Install pkg-config and pkgconf silently # this is solely a step to overcome issues with lots of annoying but non fatal and distractive error messages
+        run: |
+          brew install pkg-config || true
+          export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1
+          brew install pkgconf || true
+
+      - name: Run data preparation for Nmix models in NIMBLE
+        run: Rscript 'Montserrat_forest_bird_monitoring_data_prep.R'
+
+      - name: Configure git # this code is needed to make the created RData with all prepared data in the workflow available in the repo outside any git actions
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Commit changes to git repository
+        run: |
+          git add data/MONTSERRAT_ANNUAL_DATA_INPUT.RData
+          git commit -m "Automatically prepared data for Montserrat Forest Monitoring analysis" || echo "No changes to commit" # the echo ensures that even if there are no changes, and no commit is performed, the workflow wont fail
+
+      - name: Pull latest changes from main
+        run: |
+          git fetch origin main
+          git merge --no-edit origin/main
+
+      - name: Push changes to the repository
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_Montserrat }}
+        run: |
+          git push origin HEAD:main
+
+  job_data_preparation_nimble: # start another job
+    runs-on: macos-latest
+    needs: job_data_preparation # set dependency to first job because the output of this job is needed for the current one
+
+    steps:
+      - name: Checkout repository # provide a name for this step within the job
+        uses: actions/checkout@v3
+
+      - name: Set up R environment
+        uses: r-lib/actions/setup-r@v2
+
+      - name: Install R dependencies
+        run: |
+          Rscript -e 'install.packages(c("tidyverse", "data.table", "nimble"))'
+          Rscript -e 'filter <- dplyr::filter; select <- dplyr::select; rename <- dplyr::rename'
+
+      - name: Run general data preparation
+        run: Rscript 'Montserrat_forest_bird_monitoring_data_prep_Nmix_model_def_nimble.R' # run RScript to prepare data for Nmix models in NIMBLE
+
+      - name: Pass prepared data and defined model to next job # using artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: prepared data and defined NIMBLE model
+          path: data/Montserrat_forest_bird_monitoring_yearly_NIMBLE_model_data.RData
+          retention-days: 1 # this sets the time for how long the artifact is saved under the artifact link
 
   job_run_Nmix_model:
     runs-on: macos-latest 
-  #  needs: job_data_preparation_nimble
+    needs: job_data_preparation_nimble
     strategy:
       matrix: # starts a matrix process where multiple jobs (one for each species) run simultaneously 
         SPECIES: ["MTOR", "FOTH", "BRQD", "TREM", "ACHU", "PTCA", "PETH", "GTCA", "SBTH", "SNPI", "CAEL", "BANA"] # set all species for which this job aka running the Nmix model in NIMBLE should be performed
@@ -197,4 +197,3 @@ jobs: # define jobs
           GITHUB_TOKEN: ${{ secrets.PAT_Montserrat }}
         run: |
           git push origin HEAD:main
-
