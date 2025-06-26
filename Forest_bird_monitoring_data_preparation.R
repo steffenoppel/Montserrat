@@ -19,12 +19,14 @@ removal<-c(99,76)																			## removes only two points that cause error 
 getwd()
 setwd('C:/Users/filib/Documents/Praktika/Sempach/Montserrat') # for Filibert
 setwd('C:/STEFFEN/OneDrive - THE ROYAL SOCIETY FOR THE PROTECTION OF BIRDS/STEFFEN/RSPB/UKOT/Montserrat/Analysis/Population_status_assessment/AnnualMonitoring/Montserrat') # for Steffen
+setwd('C:/STEFFEN/OneDrive - THE ROYAL SOCIETY FOR THE PROTECTION OF BIRDS/STEFFEN/RSPB/UKOT/Montserrat/Raw_Data') # for Steffen
 
 #### 2: load data from ms access database ####
 
 # connect with database to load data from query and afterwards close connection again 
 db <- odbcConnectAccess2007('Montserrat_Birds_2024.accdb') # change name of the db to the actual one 
 tblVisit <- sqlFetch(db, 'tblVisit') # observation level covariates
+tblLoc <- sqlFetch(db, 'tblLocation') # coordinates for count points for mapping
 birds <- sqlFetch(db, 'tblBirdData') # bird count data
 Point_hab <- sqlFetch(db, 'point_habitat_data')
 Point_tree <- sqlFetch(db, 'point_tree_data')
