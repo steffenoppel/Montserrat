@@ -186,7 +186,7 @@ birds <- rbind(tblBirdData, impBirdData)
 tblVisit <- rbind(impVisit, tblVisit)
 
 # get rid of object that arent needed anymore 
-needed_objects <- c('birds', 'tblVisit', 'Point_hab', 'tblSpecies', 'Point_tree', 'select', 'filter', 'rename', 'YEAR', 'removal', 'SPECIES')
+needed_objects <- c('birds', 'tblVisit', 'tblLoc','Point_hab', 'tblSpecies', 'Point_tree', 'select', 'filter', 'rename', 'YEAR', 'removal', 'SPECIES')
 rm(list = setdiff(ls(), needed_objects)) # remove all unneeded objects 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -357,7 +357,7 @@ unique(countdata$Species) # should contain all Species you want to study
 countdata %>% filter(is.na(VisitID))
 
 # fill in the objects you want to save from the environment for further analysis
-needed_objects <- c('countdata', 'obsCov', 'siteCov', 'tblSpecies', 'YEAR', 'SPECIES', 'removal')
+needed_objects <- c('countdata', 'obsCov', 'siteCov', 'tblSpecies', 'YEAR', 'SPECIES', 'removal','tblLoc')
 rm(list = setdiff(ls(), needed_objects)) # remove all unneeded objects 
 
 # save the prepared data for other possible analysis 

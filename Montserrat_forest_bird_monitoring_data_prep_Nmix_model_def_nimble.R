@@ -266,7 +266,7 @@ inits.trend <- list(#N = Nst,
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # Define parameters to be monitored
-parameters.trend <- c("fit", "fit.new","trend","trend2","totalN","anndet")  #
+parameters.trend <- c("fit", "fit.new","trend","trend2","totalN","anndet","N")  #
 
 
 # MCMC settings

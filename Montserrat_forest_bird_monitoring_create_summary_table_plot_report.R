@@ -7,11 +7,15 @@
 # 1. Preparations  --------
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# load packages 
+# load packages
+rm(list=ls())
 library(tidyverse)
 library(data.table) 
 library(rmarkdown)
 library(nimble)
+filter<-dplyr::filter
+select<-dplyr::select
+rename<-dplyr::rename
 
 
 # load data which has been prepared in the script 'Montserrat_forest_bird_monitoring_data_prep_for_Nmix_nimble.R'
@@ -37,16 +41,44 @@ fullnames<-c("Montserrat Oriole", "Forest Thrush", "Bridled Quail-Dove", "Brown 
 # collect all files that have been created with output from Nmix models and save data in annestimates and trendout
 allout<-list.files(path = 'output/', pattern="trend_estimates.csv")
 annestimates<-tibble()
+annpointestimates<-tibble()
 trendout<-tibble()
 for (f in allout){
   x<-fread(paste0('output/', f))
-  trendout<-trendout %>% bind_rows(x %>% filter(parameter %in% c("trend","trend2")))
-  annestimates<-annestimates %>% bind_rows(x %>% filter(substr(parameter,1,6)=="totalN"))
+  trendout<-trendout %>% bind_rows(x %>% dplyr::filter(parameter %in% c("trend","trend2")))
+  annestimates<-annestimates %>% bind_rows(x %>% dplyr::filter(substr(parameter,1,6)=="totalN"))
+  annpointestimates<-annestimates %>% bind_rows(x %>% dplyr::filter(substr(parameter,1,1)=="N"))
 }
 
 # export two files with collected data 
 write.table(annestimates, "output/Annual_estimates.csv", row.names=F, sep=",")
 write.table(trendout,"output/Trend_estimates.csv", row.names=F, sep=",")
+
+
+
+##### add map data: COMBINE INFO WITH COORDINATES ###
+
+points<- tblLoc %>%
+  dplyr::filter(MajorPoint %in% unique(siteCov$Point)) %>%
+  #filter(FOREST=="CH") %>%
+  dplyr::select(Point,Eastings,Northings,Altitude,Habitat_Code) %>%
+  arrange(Point) %>%
+  mutate(order=seq_along(Point))
+
+
+out<-annpointestimates %>% separate_wider_delim(.,cols=parameter,delim=", ", names=c("Point","Year"))
+out$Point<-str_replace_all(out$Point,pattern="[^[:alnum:]]", replacement="")
+out$Year<-str_replace_all(out$Year,pattern="[^[:alnum:]]", replacement="")
+out$order<-str_replace_all(out$Point,pattern="N", replacement="")
+
+mapdata<-out %>%
+  mutate(Year=as.numeric(Year)+2010) %>%
+  mutate(order=as.numeric(order)) %>%
+  dplyr::select(-Point) %>%
+  left_join(points, by="order") %>%
+  dplyr::select(species,Year,Point, Eastings,Northings,Altitude,Habitat_Code,mean, median, lcl,ucl)
+
+fwrite(mapdata,"output/Annual_estimates_mapdata.csv")
 
 
 
