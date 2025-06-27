@@ -1,4 +1,4 @@
-#### Scrip to run Nmix models for the forest bird monitoring Montserrat in NIMBLE across all species #####
+#### Script to run Nmix models for the forest bird monitoring Montserrat in NIMBLE across all species #####
 #### this script is part of the automated workflow for an annual report for the Centre Hills Forest Bird Monitoring in Montserrat ####
 #### Script assembled by Filibert Heim, filibert.heim@posteo.de, in Nov 2024 but mainly takan and from a script from Steffen Oppel 
 
@@ -135,7 +135,7 @@ MCMCout<-as_tibble(rbind(TRENDMOD$samples[[1]],TRENDMOD$samples[[2]],TRENDMOD$sa
 # 7. Examine output and diagnostics with MCMCvis  --------
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-out<- as.data.frame(MCMCsummary(TRENDMOD$samples, params=c("trend","trend2","totalN","anndet")))
+out<- as.data.frame(MCMCsummary(TRENDMOD$samples, params=c("trend","trend2","totalN","anndet","N")))
 out$parameter<-row.names(out)
 out$species<-s
 out$BayesP<-mean(MCMCout$fit > MCMCout$fit.new)
