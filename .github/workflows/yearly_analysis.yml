@@ -46,10 +46,10 @@ jobs: # define jobs
           git add data/MONTSERRAT_ANNUAL_DATA_INPUT.RData
           git commit -m "Automatically prepared data for Montserrat Forest Monitoring analysis" || echo "No changes to commit" # the echo ensures that even if there are no changes, and no commit is performed, the workflow wont fail
 
-      - name: Pull latest changes from main
-        run: |
-          git fetch origin main
-          git merge --no-edit origin/main
+- name: Rebase on top of latest main
+  run: |
+    git fetch origin main
+    git rebase origin/main
 
       - name: Push changes to the repository
         env:
