@@ -125,10 +125,10 @@ jobs: # define jobs
           git add output/${{ matrix.SPECIES }}_trend_estimates.csv
           git commit -m "Output of Nmix models from NIMBLE calculated in git actions workflow" || echo "No changes to commit" # the echo ensures that even if there are no changes, and no commit is performed, the workflow wont fail
 
-- name: Rebase on top of latest main
-  run: |
-    git fetch origin main
-    git rebase origin/main
+      - name: Pull latest changes from main and rebase
+        run: |
+          git fetch origin main
+          git rebase origin/main
           
       - name: Push changes to the repository
         env: 
@@ -188,10 +188,10 @@ jobs: # define jobs
           git add output/Montserrat_ForestBird_AnnualReport_${YEAR}.html
           git commit -m "Summary tables of annual estimates, trends and plot from Nmix calculated in git actions workflow" || echo "No changes to commit" # the echo ensures that even if there are no changes, and no commit is performed, the workflow wont fail
 
-- name: Rebase on top of latest main
-  run: |
-    git fetch origin main
-    git rebase origin/main
+      - name: Pull latest changes from main and rebase
+        run: |
+          git fetch origin main
+          git merge rebase origin/main
 
       - name: Push changes to the repository
         env: 
