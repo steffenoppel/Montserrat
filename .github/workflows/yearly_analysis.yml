@@ -55,7 +55,7 @@ jobs: # define jobs
         env:
           GITHUB_TOKEN: ${{ secrets.PAT_Montserrat }}
         run: |
-          git push origin HEAD:main
+          git push origin HEAD:main --force
 
   job_data_preparation_nimble: # start another job
     runs-on: macos-latest
@@ -134,7 +134,7 @@ jobs: # define jobs
         env: 
           GITHUB_TOKEN: ${{ secrets.PAT_Montserrat }}
         run: |
-          git push origin HEAD:main
+          git push origin HEAD:main --force
 
   job_create_plot_report: # start another job
     runs-on: macos-latest
@@ -197,4 +197,4 @@ jobs: # define jobs
         env: 
           GITHUB_TOKEN: ${{ secrets.PAT_Montserrat }}
         run: |
-          git push origin HEAD:main
+          git push origin HEAD:main --force
