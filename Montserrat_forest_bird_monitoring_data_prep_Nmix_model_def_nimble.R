@@ -271,9 +271,9 @@ parameters.trend <- c("fit", "fit.new","trend","trend2","totalN","anndet","N")  
 
 # MCMC settings
 # number of posterior samples per chain is n.iter - n.burnin
-n.iter <- 150000   #150000
-n.burnin <- 100000  #100000
-n.chains <- 3
+n.iter <- 3000  #150000
+n.burnin <- 2000  #100000
+n.chains <- 4 #3
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 8. Preliminary test of NIMBLE model to identify problems --------
