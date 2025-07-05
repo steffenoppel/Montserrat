@@ -119,6 +119,11 @@ jobs: # define jobs
           git config --global user.name "github-actions[bot]" 
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
+      - name: Pull latest changes from main and rebase
+        run: |
+          git fetch origin main
+          git rebase origin/main
+
       - name: Commit changes to git repository 
         run: |
           git add output/${{ matrix.SPECIES }}_trend_model_nimble.rds # this selects solely the file for a certain species to pass to github
