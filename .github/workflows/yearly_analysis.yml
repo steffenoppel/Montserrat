@@ -124,9 +124,9 @@ jobs: # define jobs
       #     git fetch origin main
       #     git rebase origin/main
 
-      - name: Pull latest changes from main
-        run: |
-          git pull --rebase origin main
+      # - name: Pull latest changes from main
+      #   run: |
+      #     git pull --rebase origin main
 
       - name: Commit changes to git repository 
         run: |
