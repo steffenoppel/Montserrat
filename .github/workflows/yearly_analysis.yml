@@ -119,10 +119,14 @@ jobs: # define jobs
           git config --global user.name "github-actions[bot]" 
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Pull latest changes from main and rebase
+      # - name: Pull latest changes from main and rebase
+      #   run: |
+      #     git fetch origin main
+      #     git rebase origin/main
+
+      - name: Pull latest changes from main
         run: |
-          git fetch origin main
-          git rebase origin/main
+          git pull --rebase origin main
 
       - name: Commit changes to git repository 
         run: |
