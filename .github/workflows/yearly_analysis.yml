@@ -194,7 +194,7 @@ jobs: # define jobs
         run: |
           git add output/Annual_estimates.csv # this will overwrite the outputs every year!
           git add output/Trend_estimates.csv
-          git add output/Annual_estimates_mapdata.csv
+          # git add output/Annual_estimates_mapdata.csv
           git add output/Montserrat_ForestBird_Trends${YEAR}.pdf # ERROR: if envYEAR != lastMonitoringYEAR -> ERROR this will lead to a library of annual reports and trend plots for every year
           git add output/Montserrat_ForestBird_AnnualReport_${YEAR}.html
           git commit -m "Summary tables of annual estimates, trends and plot from Nmix calculated in git actions workflow" || echo "No changes to commit" # the echo ensures that even if there are no changes, and no commit is performed, the workflow wont fail
