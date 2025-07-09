@@ -54,31 +54,31 @@ for (f in allout){
 write.table(annestimates, "output/Annual_estimates.csv", row.names=F, sep=",")
 write.table(trendout,"output/Trend_estimates.csv", row.names=F, sep=",")
 
-
+#### THIS SOMEHOW DOESN'T WORK AND CAUSES WORKFLOW TO FAIL
 
 ##### add map data: COMBINE INFO WITH COORDINATES ###
 
-points<- tblLoc %>%
-  dplyr::filter(MajorPoint %in% unique(siteCov$Point)) %>%
-  #filter(FOREST=="CH") %>%
-  dplyr::select(Point,Eastings,Northings,Altitude,Habitat_Code) %>%
-  arrange(Point) %>%
-  mutate(order=seq_along(Point))
+# points<- tblLoc %>%
+#   dplyr::filter(MajorPoint %in% unique(siteCov$Point)) %>%
+#   #filter(FOREST=="CH") %>%
+#   dplyr::select(Point,Eastings,Northings,Altitude,Habitat_Code) %>%
+#   arrange(Point) %>%
+#   mutate(order=seq_along(Point))
 
 
-out<-annpointestimates %>% separate_wider_delim(.,cols=parameter,delim=", ", names=c("Point","Year"))
-out$Point<-str_replace_all(out$Point,pattern="[^[:alnum:]]", replacement="")
-out$Year<-str_replace_all(out$Year,pattern="[^[:alnum:]]", replacement="")
-out$order<-str_replace_all(out$Point,pattern="N", replacement="")
+# out<-annpointestimates %>% separate_wider_delim(.,cols=parameter,delim=", ", names=c("Point","Year"))
+# out$Point<-str_replace_all(out$Point,pattern="[^[:alnum:]]", replacement="")
+# out$Year<-str_replace_all(out$Year,pattern="[^[:alnum:]]", replacement="")
+# out$order<-str_replace_all(out$Point,pattern="N", replacement="")
 
-mapdata<-out %>%
-  mutate(Year=as.numeric(Year)+2010) %>%
-  mutate(order=as.numeric(order)) %>%
-  dplyr::select(-Point) %>%
-  left_join(points, by="order") %>%
-  dplyr::select(species,Year,Point, Eastings,Northings,Altitude,Habitat_Code,mean, median, lcl,ucl)
+# mapdata<-out %>%
+#   mutate(Year=as.numeric(Year)+2010) %>%
+#   mutate(order=as.numeric(order)) %>%
+#   dplyr::select(-Point) %>%
+#   left_join(points, by="order") %>%
+#   dplyr::select(species,Year,Point, Eastings,Northings,Altitude,Habitat_Code,mean, median, lcl,ucl)
 
-fwrite(mapdata,"output/Annual_estimates_mapdata.csv")
+# fwrite(mapdata,"output/Annual_estimates_mapdata.csv")
 
 
 

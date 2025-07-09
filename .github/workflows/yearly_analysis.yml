@@ -119,6 +119,15 @@ jobs: # define jobs
           git config --global user.name "github-actions[bot]" 
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
+      # - name: Pull latest changes from main and rebase
+      #   run: |
+      #     git fetch origin main
+      #     git rebase origin/main
+
+      # - name: Pull latest changes from main
+      #   run: |
+      #     git pull --rebase origin main
+
       - name: Commit changes to git repository 
         run: |
           git add output/${{ matrix.SPECIES }}_trend_model_nimble.rds # this selects solely the file for a certain species to pass to github
@@ -127,8 +136,10 @@ jobs: # define jobs
 
       - name: Pull latest changes from main and rebase
         run: |
-          git fetch origin main
-          git rebase origin/main
+          git status 
+          git diff
+          # git fetch origin main
+          # git rebase origin/main
           
       - name: Push changes to the repository
         env: 
@@ -183,15 +194,17 @@ jobs: # define jobs
         run: |
           git add output/Annual_estimates.csv # this will overwrite the outputs every year!
           git add output/Trend_estimates.csv
-          git add output/Annual_estimates_mapdata.csv
+          # git add output/Annual_estimates_mapdata.csv
           git add output/Montserrat_ForestBird_Trends${YEAR}.pdf # ERROR: if envYEAR != lastMonitoringYEAR -> ERROR this will lead to a library of annual reports and trend plots for every year
           git add output/Montserrat_ForestBird_AnnualReport_${YEAR}.html
           git commit -m "Summary tables of annual estimates, trends and plot from Nmix calculated in git actions workflow" || echo "No changes to commit" # the echo ensures that even if there are no changes, and no commit is performed, the workflow wont fail
 
       - name: Pull latest changes from main and rebase
         run: |
-          git fetch origin main
-          git merge rebase origin/main
+          git status 
+          git diff
+          # git fetch origin main
+          # git merge rebase origin/main
 
       - name: Push changes to the repository
         env: 
