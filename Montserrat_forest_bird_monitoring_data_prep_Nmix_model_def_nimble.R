@@ -13,7 +13,7 @@ library(data.table)
 library(nimble)
 
 # load data from general data preparation script 'Montserrat_forest_bird_monitoring_data_prep.R'
-load(file = 'data/MONTSERRAT_ANNUAL_DATA_INPUT.RData')
+load(file = 'data/montserrat_annual_data_input.RData')
 
 # save SPECIES as full names  
 SPECIES # print species codes 

@@ -32,11 +32,11 @@ filter <- dplyr::filter
 getwd()
 #setwd('C:/Users/filib/Documents/Praktika/Sempach/Montserrat') # for Filibert
 setwd('C:/STEFFEN/OneDrive - THE ROYAL SOCIETY FOR THE PROTECTION OF BIRDS/STEFFEN/RSPB/UKOT/Montserrat/Analysis/Population_status_assessment/AnnualMonitoring/Montserrat') # for Steffen
-# connect with database to load data from query and afterwards close connection again
-db <- odbcConnectAccess2007('data/Montserrat_Birds_2024.accdb') # change name of the db to the actual one
-tblLoc <- sqlFetch(db, 'tblLocation') # coordinates for the points
-odbcClose(db)
-load("data/MONTSERRAT_ANNUAL_DATA_INPUT2024.RData")
+# # connect with database to load data from query and afterwards close connection again
+# db <- odbcConnectAccess2007('data/Montserrat_Birds_2024.accdb') # change name of the db to the actual one
+# tblLoc <- sqlFetch(db, 'tblLocation') # coordinates for the points
+# odbcClose(db)
+load("data/montserrat_annual_data_input.RData")
 
 
 

@@ -54,8 +54,6 @@ for (f in allout){
 write.table(annestimates, "output/Annual_estimates.csv", row.names=F, sep=",")
 write.table(trendout,"output/Trend_estimates.csv", row.names=F, sep=",")
 
-#### THIS SOMEHOW DOESN'T WORK AND CAUSES WORKFLOW TO FAIL
-
 ##### add map data: COMBINE INFO WITH COORDINATES ###
 
 points<- tblLoc %>%
