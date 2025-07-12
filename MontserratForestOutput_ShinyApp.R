@@ -54,11 +54,12 @@ YEAR<- if_else(month(Sys.time())<6,year(Sys.time())-1,year(Sys.time()))
 #.....................................................................................
 
 
-file_url <- sprintf("https://github.com/steffenoppel/Montserrat/blob/main/data/MONTSERRAT_ANNUAL_DATA_INPUT%s.RData?raw=true",YEAR)
-load(url(file_url))
+# file_url <- "https://github.com/steffenoppel/Montserrat/blob/main/data/MONTSERRAT_ANNUAL_DATA_INPUT.RData?raw=true"
+# load(url(file_url))
 
 
 #load(sprintf("data/MONTSERRAT_ANNUAL_DATA_INPUT%s.RData",YEAR))
+SPECIES<-c("MTOR","FOTH","BRQD","TREM","ACHU","PTCA","PETH","GTCA","SBTH","SNPI","CAEL","BANA")
 fullnames<-c("Montserrat Oriole", "Forest Thrush", "Bridled Quail-Dove", "Brown Trembler",
              "Antillean Crested Hummingbird","Purple-throated Carib",
              "Pearly-eyed Thrasher","Green-throated Carib","Scaly-breasted Thrasher","Scaly-naped Pigeon",
@@ -79,11 +80,13 @@ fullyears<-seq(2011,YEAR,1)
 # mapdata<-fread(sprintf("output/Annual_estimates%s_mapdata.csv",YEAR))
 
 ## read in data directly from GitHub (necessary for remote deployment)
-urlfile<-sprintf("https://raw.githubusercontent.com/steffenoppel/Montserrat/refs/heads/main/output/Annual_estimates%s.csv",YEAR)
+urlfile<-"https://raw.githubusercontent.com/steffenoppel/Montserrat/refs/heads/main/data/point_locs_centrehills.csv"
+tblLoc<-read_csv(url(urlfile),show_col_types = FALSE)
+urlfile<-"https://raw.githubusercontent.com/steffenoppel/Montserrat/refs/heads/main/output/Annual_estimates.csv"
 annestimates<-read_csv(url(urlfile),show_col_types = FALSE)
-urlfile<-sprintf("https://raw.githubusercontent.com/steffenoppel/Montserrat/refs/heads/main/output/Trend_estimates%s.csv",YEAR)
+urlfile<-"https://raw.githubusercontent.com/steffenoppel/Montserrat/refs/heads/main/output/Trend_estimates.csv"
 trendout<-read_csv(url(urlfile),show_col_types = FALSE)
-urlfile<-sprintf("https://raw.githubusercontent.com/steffenoppel/Montserrat/refs/heads/main/output/Annual_estimates%s_mapdata.csv",YEAR)
+urlfile<-"https://raw.githubusercontent.com/steffenoppel/Montserrat/refs/heads/main/output/Annual_estimates_mapdata.csv"
 mapdata<-read_csv(url(urlfile),show_col_types = FALSE)
 
 #.....................................................................................
@@ -98,9 +101,7 @@ mapdata$fullspec<-fullnames[match(mapdata$species, SPECIES)]
 ## add colour
 trendout<-trendout %>%
   mutate(col=ifelse(lcl<0,ifelse(ucl<0,"darkred","black"),ifelse(ucl>0,"forestgreen","black"))) %>%
-  #mutate(col=ifelse(species=="CAEL","darkred",col)) %>%
-  group_by(species, fullspec) %>%
-  summarise(col=first(col))
+  mutate(col=ifelse(species=="CAEL","darkred",col))
 
 ## add numeric year  
 annestimates$Year<-str_replace_all(annestimates$parameter,pattern="[^[:alnum:]]", replacement="")
@@ -187,10 +188,11 @@ ui <- fluidPage(
       renderPlot({
         
         ggplot(data= annestimates %>% 
-                 filter(Year!=2020, fullspec==input$species))+
-          geom_line(aes(x=Year, y=mean),col=trendout$col[match(input$species,trendout$fullspec)], linewidth=1)+
-          geom_point(aes(x=Year, y=mean),col=trendout$col[match(input$species,trendout$fullspec)], size=2)+
-          geom_errorbar(aes(x=Year, ymin=lcl,ymax=ucl),col=trendout$col[match(input$species,trendout$fullspec)], width=.1) +
+                 filter(Year!=2020, fullspec==input$species) %>%
+                 mutate(col = as.factor(trendout$col[match(species,trendout$species)])))+
+          geom_line(aes(x=Year, y=mean,col=col), linewidth=1)+
+          geom_point(aes(x=Year, y=mean,col=col), size=2)+
+          geom_errorbar(aes(x=Year, ymin=lcl,ymax=ucl,col=col), width=.1) +
           
           ## remove the legend
           theme(legend.position="none")+
