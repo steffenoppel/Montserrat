@@ -109,7 +109,7 @@ annestimates$Year<-str_replace_all(annestimates$Year,pattern="totalN", replaceme
 annestimates$Year<-as.numeric(annestimates$Year)+2010
 
 ## define dimensions of arrays
-nsites<-length(unique(siteCov$Point))
+nsites<-length(unique(mapdata$Point))
 
 ## create simple feature
 mapdata_sf<-mapdata %>%
