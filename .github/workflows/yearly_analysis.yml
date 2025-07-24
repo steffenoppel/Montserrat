@@ -160,8 +160,8 @@ jobs: # define jobs
         env: 
           GITHUB_TOKEN: ${{ secrets.PAT_Montserrat }}
         run: |
-    git pull --rebase origin main
-    git push origin HEAD:main
+          git pull --rebase origin main
+          git push origin HEAD:main
 
   job_create_plot_report: # start another job
     runs-on: macos-latest
