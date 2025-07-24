@@ -155,18 +155,13 @@ jobs: # define jobs
           git add output/${{ matrix.SPECIES }}_trend_estimates.csv
           git commit -m "Output of Nmix models from NIMBLE calculated in git actions workflow" || echo "No changes to commit" # the echo ensures that even if there are no changes, and no commit is performed, the workflow wont fail
 
-      - name: Pull latest changes from main and rebase
-        run: |
-          git status 
-          git diff
-          # git fetch origin main
-          # git rebase origin/main
-          
-      - name: Push changes to the repository
+
+      - name: Pull latest changes and push changes to the repository
         env: 
           GITHUB_TOKEN: ${{ secrets.PAT_Montserrat }}
         run: |
-          git push origin HEAD:main --force
+    git pull --rebase origin main
+    git push origin HEAD:main
 
   job_create_plot_report: # start another job
     runs-on: macos-latest
