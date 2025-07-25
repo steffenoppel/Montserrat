@@ -1,0 +1,73 @@
+name: create annual report # name of my workflow 
+
+on: 
+  # schedule: 
+  #   - cron: "14 0 6 6 *" # triggers the workflow every year on the first of June at midnight; 0 0  (00:00 Midnight), 1 (first day of month), 6 (June), * (every year)
+
+  push: 
+    paths: 
+      - 'Montserrat/data/**' # triggers a workflow every time a new file is added to the data folder in the repository
+      
+  workflow_dispatch:  # This allows manual triggering of the workflow
+ 
+jobs: # define jobs
+
+  job_create_plot_report: # start another job
+    runs-on: macos-latest
+    needs: job_run_Nmix_model # set dependency to first job because the output of this job is needed for the current one 
+    
+    steps:
+      - name: Checkout repository # provide a name for this step within the job
+        uses: actions/checkout@v3
+
+      - name: Get prepared data and defined model from previous job # using artifacts
+        uses: actions/download-artifact@v4
+        with: 
+          name: prepared data and defined NIMBLE model # this data is needed for the obsCovs and siteCovs etc for plotting
+          path: data/  # Specify the destination directory
+
+      - name: Set up R environment
+        uses: r-lib/actions/setup-r@v2
+
+      - name: Set up Pandoc # install pandoc for rendering an rmd 
+        uses: r-lib/actions/setup-pandoc@v2
+
+      - name: Install XQuartz # this seems to be needed on MacOS for a few graphical functions in R
+        run: brew install --cask xquartz
+
+      - name: Install R dependencies 
+        run: | 
+          Rscript -e 'install.packages(c("tidyverse", "data.table", "rmarkdown", "knitr", "nimble", "kableExtra"))' 
+          Rscript -e 'filter <- dplyr::filter; select <- dplyr::select; rename <- dplyr::rename'
+
+      - name: Run general data preparation 
+        run: Rscript 'Montserrat_forest_bird_monitoring_create_summary_table_plot_report.R' # run RScript to prepare data for Nmix models in NIMBLE
+
+      - name: Get YEAR variable # to only push these files with the correct YEAR
+        run: |
+          ls -l  # Lists files to confirm YEAR.txt is present
+          echo "YEAR=$(cat YEAR.txt)" >> $GITHUB_ENV # get YEAR from txt file as object in git environment
+
+      - name: Configure git # this code is needed to make the created RData with all prepared data in the workflow available in the repo outside any git actions 
+        run: |
+          git config --global user.name "github-actions[bot]" 
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Commit changes to git repository 
+        env: 
+          YEAR: ${{ env.YEAR }}
+        run: |
+          git add output/Annual_estimates.csv # this will overwrite the outputs every year!
+          git add output/Trend_estimates.csv
+          git add output/Annual_estimates_mapdata.csv
+          git add output/Montserrat_ForestBird_Trends${YEAR}.pdf # ERROR: if envYEAR != lastMonitoringYEAR -> ERROR this will lead to a library of annual reports and trend plots for every year
+          git add output/Montserrat_ForestBird_AnnualReport_${YEAR}.html
+          git commit -m "Summary tables of annual estimates, trends and plot from Nmix calculated in git actions workflow" || echo "No changes to commit" # the echo ensures that even if there are no changes, and no commit is performed, the workflow wont fail
+
+
+      - name: Push changes to the repository
+        env: 
+          GITHUB_TOKEN: ${{ secrets.PAT_Montserrat }}
+        run: |
+          git pull --rebase origin main
+          git push origin HEAD:main
