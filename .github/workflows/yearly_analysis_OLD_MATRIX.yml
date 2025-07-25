@@ -133,48 +133,35 @@ jobs: # define jobs
         env: # create an environment variable that is passed in this step
           SPECIES: ${{ matrix.SPECIES }}
         run: |
-          Rscript 'Montserrat_forest_bird_monitoring_run_Nmix_nimble.R' ${{ matrix.SPECIES }}
+          Rscript 'Montserrat_forest_bird_monitoring_run_Nmix_nimble.R' ${{ matrix.SPECIES }} # run RScript with models for each species
 
-      - name: Upload model output
-        uses: actions/upload-artifact@v4
-        with:
-          name: output-${{ matrix.SPECIES }}
-          path: |
-            output/${{ matrix.SPECIES }}_trend_model_nimble.rds
-            output/${{ matrix.SPECIES }}_trend_estimates.csv
-
-  job_merge_outputs_and_commit:
-    runs-on: ubuntu-latest
-    needs: job_run_Nmix_model
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Download all model outputs
-        uses: actions/download-artifact@v4
-        with:
-          path: output/
-
-      - name: Move files to output directory
+      - name: Configure git # this code is needed to make the created RData with all prepared data in the workflow available in the repo outside any git actions 
         run: |
-          mkdir -p output
-          find output -type f -name "*.rds" -exec mv {} output/ \;
-          find output -type f -name "*.csv" -exec mv {} output/ \;
-
-      - name: Configure git
-        run: |
-          git config --global user.name "github-actions[bot]"
+          git config --global user.name "github-actions[bot]" 
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Commit and push all outputs
-        env:
+      # - name: Pull latest changes from main and rebase
+      #   run: |
+      #     git fetch origin main
+      #     git rebase origin/main
+
+      # - name: Pull latest changes from main
+      #   run: |
+      #     git pull --rebase origin main
+
+      - name: Commit changes to git repository 
+        run: |
+          git add output/${{ matrix.SPECIES }}_trend_model_nimble.rds # this selects solely the file for a certain species to pass to github
+          git add output/${{ matrix.SPECIES }}_trend_estimates.csv
+          git commit -m "Output of Nmix models from NIMBLE calculated in git actions workflow" || echo "No changes to commit" # the echo ensures that even if there are no changes, and no commit is performed, the workflow wont fail
+
+
+      - name: Pull latest changes and push changes to the repository
+        env: 
           GITHUB_TOKEN: ${{ secrets.PAT_Montserrat }}
         run: |
-          git add output/
-          git commit -m "Add all Nmix model outputs from matrix jobs" || echo "No changes to commit"
           git pull --rebase origin main
           git push origin HEAD:main
-
 
   job_create_plot_report: # start another job
     runs-on: macos-latest
