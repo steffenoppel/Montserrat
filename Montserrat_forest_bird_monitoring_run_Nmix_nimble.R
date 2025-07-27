@@ -149,7 +149,7 @@ names(out)[c(3,4,5)]<-c('lcl','median', 'ucl')
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
 
 # save model to output
-saveRDS(TRENDMOD,sprintf("output/prepared data and defined NIMBLE model/%s_trend_model_nimble.rds",s))
+saveRDS(TRENDMOD,sprintf("output/%s_trend_model_nimble.rds",s))
 
 # save trendestimates to output
 fwrite(out,sprintf("output/%s_trend_estimates.csv",s))
