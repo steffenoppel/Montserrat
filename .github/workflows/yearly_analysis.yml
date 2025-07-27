@@ -47,7 +47,8 @@ jobs: # define jobs
       #     brew install pkgconf || true
 
       - name: Run data preparation for Nmix models in NIMBLE
-        run: Rscript 'Montserrat_forest_bird_monitoring_data_prep.R'
+        run: |
+          Rscript 'Montserrat_forest_bird_monitoring_data_prep.R'
 
       - name: Configure git # this code is needed to make the created RData with all prepared data in the workflow available in the repo outside any git actions
         run: |
@@ -87,7 +88,8 @@ jobs: # define jobs
           Rscript -e 'filter <- dplyr::filter; select <- dplyr::select; rename <- dplyr::rename'
 
       - name: Run general data preparation
-        run: Rscript 'Montserrat_forest_bird_monitoring_data_prep_Nmix_model_def_nimble.R' ${{ inputs.n.iter }} ${{ inputs.n.burnin }} ${{ inputs.n.chains }} # run RScript to prepare data for Nmix models in NIMBLE and makes inputs.(name of the input) available)
+        run: |
+          Rscript Montserrat_forest_bird_monitoring_data_prep_Nmix_model_def_nimble.R ${{ inputs.n.iter }} ${{ inputs.n.burnin }} ${{ inputs.n.chains }} # run RScript to prepare data for Nmix models in NIMBLE and makes inputs.(name of the input) available)
         
       - name: Configure git # this code is needed to make the created RData with all prepared data in the workflow available in the repo outside any git actions
         run: |
