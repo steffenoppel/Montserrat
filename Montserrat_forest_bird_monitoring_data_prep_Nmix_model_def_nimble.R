@@ -289,6 +289,10 @@ cat("  n.iter =", n.iter, "\n")
 cat("  n.burnin =", n.burnin, "\n")
 cat("  n.chains =", n.chains, "\n")
 
+# just as debugging step
+print('length of mcmc.input:')
+length(mcmc.input)
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 8. Preliminary test of NIMBLE model to identify problems --------
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
