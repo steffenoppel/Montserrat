@@ -279,9 +279,9 @@ n.burnin <- 100000  #100000
 n.chains <- 3 #3
 
 # Override MCMC settings if arguments are passed with the workflow dispatch, I suppose the oder is relevant!
-if (length(args) >= 1) n.iter <- as.numeric(args[1])
-if (length(args) >= 2) n.burnin  <- as.numeric(args[2])
-if (length(args) >= 3) n.chains  <- as.numeric(args[3])
+if (length(mcmc.input) >= 1) n.iter <- as.numeric(mcmc.input[1])
+if (length(mcmc.input) >= 2) n.burnin  <- as.numeric(mcmc.input[2])
+if (length(mcmc.input) >= 3) n.chains  <- as.numeric(mcmc.input[3])
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 8. Preliminary test of NIMBLE model to identify problems --------
