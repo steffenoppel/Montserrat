@@ -13,7 +13,7 @@ on:
       n.iter: 
         description: "Number of samples for each N-mixture model in NIMBLE"
         required: false
-        default: "150000" # this gives the default number of samples
+        default: "250000" # this gives the default number of samples
       n.burnin: 
         description: "Number of burn-in iterations for each N-mixture model in NIMBLE"
         required: false
