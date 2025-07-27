@@ -12,7 +12,7 @@ on:
  
 jobs: # define jobs
   job_data_preparation: # set the name of a below defined job ## COMMENTED OUT BECAUSE NOT POSSIBLE TO AUTOMATE
-    runs-on: macos-latest # set Environment for the job, here use windows as the virtual machine environment
+    runs-on: macOS 15  # set Environment for the job, here use windows as the virtual machine environment
 
     steps:
       - name: Checkout repository # provide a name for this step within the job
@@ -27,11 +27,11 @@ jobs: # define jobs
 
           Rscript -e 'filter <- dplyr::filter; select <- dplyr::select; rename <- dplyr::rename'
 
-      - name: Install pkg-config and pkgconf silently # this is solely a step to overcome issues with lots of annoying but non fatal and distractive error messages
-        run: |
-          brew install pkg-config || true
-          export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1
-          brew install pkgconf || true
+      #- name: Install pkg-config and pkgconf silently # this is solely a step to overcome issues with lots of annoying but non fatal and distractive error messages
+      #  run: |
+      #    brew install pkg-config || true
+      #    export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1
+      #    brew install pkgconf || true
 
       - name: Run data preparation for Nmix models in NIMBLE
         run: Rscript 'Montserrat_forest_bird_monitoring_data_prep.R'
