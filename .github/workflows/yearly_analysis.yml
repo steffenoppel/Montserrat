@@ -87,6 +87,12 @@ jobs: # define jobs
           Rscript -e 'install.packages(c("tidyverse", "data.table", "nimble"))'
           Rscript -e 'filter <- dplyr::filter; select <- dplyr::select; rename <- dplyr::rename'
 
+      - name: Echo input values for debugging
+        run: |
+          echo "n.iter: ${{ inputs.n.iter }}"
+          echo "n.burnin: ${{ inputs.n.burnin }}"
+          echo "n.chains: ${{ inputs.n.chains }}"
+
       - name: Run general data preparation
         run: |
           Rscript Montserrat_forest_bird_monitoring_data_prep_Nmix_model_def_nimble.R ${{ inputs.n.iter }} ${{ inputs.n.burnin }} ${{ inputs.n.chains }} # run RScript to prepare data for Nmix models in NIMBLE and makes inputs.(name of the input) available)
