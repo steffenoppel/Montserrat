@@ -75,6 +75,11 @@ jobs: # define jobs
     runs-on: macos-latest
     needs: job_data_preparation # set dependency to first job because the output of this job is needed for the current one
 
+    env: # create environmental variables 
+      N_ITER: ${{ inputs.n.iter }}
+      N_BURNIN: ${{ inputs.n.burnin }}
+      N_CHAINS: ${{ inputs.n.chains }}
+
     steps:
       - name: Checkout repository # provide a name for this step within the job
         uses: actions/checkout@v3
@@ -89,13 +94,13 @@ jobs: # define jobs
 
       - name: Echo input values for debugging
         run: |
-          echo "n.iter: ${{ inputs.n.iter }}"
-          echo "n.burnin: ${{ inputs.n.burnin }}"
-          echo "n.chains: ${{ inputs.n.chains }}"
+          echo "n.iter: $N_ITER"
+          echo "n.burnin: $N_BURNIN"
+          echo "n.chains: $N_CHAINS"
 
       - name: Run general data preparation
         run: |
-          Rscript Montserrat_forest_bird_monitoring_data_prep_Nmix_model_def_nimble.R ${{ inputs.n.iter }} ${{ inputs.n.burnin }} ${{ inputs.n.chains }} # run RScript to prepare data for Nmix models in NIMBLE and makes inputs.(name of the input) available)
+          Rscript Montserrat_forest_bird_monitoring_data_prep_Nmix_model_def_nimble.R $N_ITER $N_BURNIN $N_CHAINS # run RScript to prepare data for Nmix models in NIMBLE and makes the environm. variables inputs.(name of the input) available
         
       - name: Configure git # this code is needed to make the created RData with all prepared data in the workflow available in the repo outside any git actions
         run: |
