@@ -15,6 +15,9 @@ library(nimble)
 # load data from general data preparation script 'Montserrat_forest_bird_monitoring_data_prep.R'
 load(file = 'data/montserrat_annual_data_input.RData')
 
+# load input from workflow dispatch - for costomized workflow runs with adjustable n.sim, n.burnin and n.chains
+mcmc.input <- commandArgs(trailingOnly = TRUE)
+
 # save SPECIES as full names  
 SPECIES # print species codes 
 fullnames <- c("Montserrat Oriole", "Forest Thrush", "Bridled Quail-Dove", "Brown Trembler", # save full species names in the same order as SPECIES 
@@ -271,9 +274,14 @@ parameters.trend <- c("fit", "fit.new","trend","trend2","totalN","anndet","N")  
 
 # MCMC settings
 # number of posterior samples per chain is n.iter - n.burnin
-n.iter <- 250 #150000
-n.burnin <- 100  #100000
+n.iter <- 150000 #150000
+n.burnin <- 100000  #100000
 n.chains <- 3 #3
+
+# Override MCMC settings if arguments are passed with the workflow dispatch, I suppose the oder is relevant!
+if (length(args) >= 1) n.iter <- as.numeric(args[1])
+if (length(args) >= 2) n.burnin  <- as.numeric(args[2])
+if (length(args) >= 3) n.chains  <- as.numeric(args[3])
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 8. Preliminary test of NIMBLE model to identify problems --------
