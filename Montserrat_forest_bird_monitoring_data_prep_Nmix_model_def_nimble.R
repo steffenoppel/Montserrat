@@ -273,13 +273,18 @@ parameters.trend <- c("fit", "fit.new","trend","trend2","totalN","anndet","N")  
 
 
 # MCMC settings
-# number of posterior samples per chain is n.iter - n.burnin
-n.iter <- as.numeric(mcmc.input[1])  #250000
-n.burnin <- as.numeric(mcmc.input[2])  #100000
-n.chains <-  as.numeric(mcmc.input[3]) #3
+# set default number of posterior samples per chain is n.iter - n.burnin
+default.n.iter <- 250000 #250000
+default.n.burnin <- 100000 #100000
+default.n.burnin <-  3 #3
+
+# set workflow dispatch values or default MCMC settings
+n.iter <- if(length(mcmc.input) >= 1) as.numeric(mcmc.input[1]) else default.n.iter
+n.burnin <- if(length(mcmc.input) >= 2) as.numeric(mcmc.input[2]) else default.n.burnin
+n.chains <- if(length(mcmc.input) >= 3) as.numeric(mcmc.input[3]) else default.n.burnin
 
 # make sure that correct MCMC settings are used for defining the model 
-cat("Defining N-moixture model with:\n")
+cat("Defining N-mixture model with:\n")
 cat("  n.iter =", n.iter, "\n")
 cat("  n.burnin =", n.burnin, "\n")
 cat("  n.chains =", n.chains, "\n")
