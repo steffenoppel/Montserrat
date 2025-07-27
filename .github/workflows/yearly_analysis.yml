@@ -23,7 +23,7 @@ jobs: # define jobs
 
       - name: Install R dependencies
         run: |
-          Rscript -e 'install.packages(c("tidyverse", "data.table"))'
+          Rscript -e 'install.packages(c("tidyverse", "data.table", "nimble"))'
 
           Rscript -e 'filter <- dplyr::filter; select <- dplyr::select; rename <- dplyr::rename'
 
