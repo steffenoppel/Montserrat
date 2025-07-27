@@ -13,15 +13,15 @@ on:
       iter: 
         description: "Number of samples for each N-mixture model in NIMBLE"
         required: true
-        # default: "250000" # this gives the default number of samples
+        default: "250000" # this gives the default number of samples
       burnin: 
         description: "Number of burn-in iterations for each N-mixture model in NIMBLE"
         required: true
-        # default: "100000"
+        default: "100000"
       chains: 
         description: "Number of chains for each N-mixture model in NIMBLE"
         required: true
-        # default: "3"
+        default: "3"
  
 jobs: # define jobs
   job_data_preparation: # set the name of a below defined job ## COMMENTED OUT BECAUSE NOT POSSIBLE TO AUTOMATE
@@ -95,7 +95,7 @@ jobs: # define jobs
 
       - name: Run general data preparation
         run: |
-          Rscript Montserrat_forest_bird_monitoring_data_prep_Nmix_model_def_nimble.R $N_ITER $N_BURNIN $N_CHAINS # run RScript to prepare data for Nmix models in NIMBLE and makes the environm. variables inputs.(name of the input) available
+          Rscript Montserrat_forest_bird_monitoring_data_prep_Nmix_model_def_nimble.R ${{ github.event.inputs.iter }} ${{ github.event.inputs.burnin }} ${{ github.event.inputs.chains }} # run RScript to prepare data for Nmix models in NIMBLE and makes the ariables github.event.inputs.(name of the input) available
         
       - name: Configure git # this code is needed to make the created RData with all prepared data in the workflow available in the repo outside any git actions
         run: |
