@@ -37,14 +37,7 @@ jobs: # define jobs
       - name: Install R dependencies
         run: |
           Rscript -e 'install.packages(c("tidyverse", "data.table", "nimble"))'
-
           Rscript -e 'filter <- dplyr::filter; select <- dplyr::select; rename <- dplyr::rename'
-
-      # - name: Install pkg-config and pkgconf silently # this is solely a step to overcome issues with lots of annoying but non fatal and distractive error messages
-      #   run: |
-      #     brew install pkg-config || true
-      #     export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1
-      #     brew install pkgconf || true
 
       - name: Run data preparation for Nmix models in NIMBLE
         run: |
@@ -95,6 +88,7 @@ jobs: # define jobs
 
       - name: Run general data preparation
         run: |
+          echo 'MCMC settings are going to be defined with ${{ github.event.inputs.iter }} iterations, \ ${{ github.event.inputs.burnin }} samples for the burn-in and \ ${{ github.event.inputs.chains }} chains. \ The thinning is pre-set to 10.' # just a message to remind on the MCMC settings
           Rscript Montserrat_forest_bird_monitoring_data_prep_Nmix_model_def_nimble.R ${{ github.event.inputs.iter }} ${{ github.event.inputs.burnin }} ${{ github.event.inputs.chains }} # run RScript to prepare data for Nmix models in NIMBLE and makes the ariables github.event.inputs.(name of the input) available
         
       - name: Configure git # this code is needed to make the created RData with all prepared data in the workflow available in the repo outside any git actions
