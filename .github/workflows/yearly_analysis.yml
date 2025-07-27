@@ -9,7 +9,7 @@ on:
       - 'Montserrat/data/**' # triggers a workflow every time a new file is added to the data folder in the repository
       
   workflow_dispatch:  # This allows manual triggering of the workflow
-    inputs: 
+    inputs: # to manually set values for the workflow run as n.samples, burn-in or n.chains
       samples: 
         description: "Number of samples for each N-mixture model in NIMBLE"
         required: false
@@ -18,6 +18,10 @@ on:
         description: "Number of burn-in iterations for each N-mixture model in NIMBLE"
         required: false
         default: "100000"
+      chains: 
+        description: "Number of chains for each N-mixture model in NIMBLE"
+        required: false
+        default: "3"
  
 jobs: # define jobs
   job_data_preparation: # set the name of a below defined job ## COMMENTED OUT BECAUSE NOT POSSIBLE TO AUTOMATE
