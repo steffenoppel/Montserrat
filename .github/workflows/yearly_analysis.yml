@@ -10,15 +10,15 @@ on:
       
   workflow_dispatch:  # This allows manual triggering of the workflow
     inputs: # to manually set values for the workflow run as n.samples, burn-in or n.chains
-      samples: 
+      n.iter: 
         description: "Number of samples for each N-mixture model in NIMBLE"
         required: false
         default: "150000" # this gives the default number of samples
-      burnin: 
+      n.burnin: 
         description: "Number of burn-in iterations for each N-mixture model in NIMBLE"
         required: false
         default: "100000"
-      chains: 
+      n.chains: 
         description: "Number of chains for each N-mixture model in NIMBLE"
         required: false
         default: "3"
@@ -87,7 +87,7 @@ jobs: # define jobs
           Rscript -e 'filter <- dplyr::filter; select <- dplyr::select; rename <- dplyr::rename'
 
       - name: Run general data preparation
-        run: Rscript 'Montserrat_forest_bird_monitoring_data_prep_Nmix_model_def_nimble.R' # run RScript to prepare data for Nmix models in NIMBLE
+        run: Rscript 'Montserrat_forest_bird_monitoring_data_prep_Nmix_model_def_nimble.R' ${{ inputs.n.iter }} ${{ inputs.n.burnin }} ${{ inputs.n.chains }} # run RScript to prepare data for Nmix models in NIMBLE and makes inputs.(name of the input) available)
         
       - name: Configure git # this code is needed to make the created RData with all prepared data in the workflow available in the repo outside any git actions
         run: |
