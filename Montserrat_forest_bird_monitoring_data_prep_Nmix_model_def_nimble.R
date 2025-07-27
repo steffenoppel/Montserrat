@@ -274,7 +274,7 @@ parameters.trend <- c("fit", "fit.new","trend","trend2","totalN","anndet","N")  
 
 # MCMC settings
 # number of posterior samples per chain is n.iter - n.burnin
-n.iter <- 150000 #150000
+n.iter <- 250000 #250000
 n.burnin <- 100000  #100000
 n.chains <- 3 #3
 
@@ -282,6 +282,12 @@ n.chains <- 3 #3
 if (length(mcmc.input) >= 1) n.iter <- as.numeric(mcmc.input[1])
 if (length(mcmc.input) >= 2) n.burnin  <- as.numeric(mcmc.input[2])
 if (length(mcmc.input) >= 3) n.chains  <- as.numeric(mcmc.input[3])
+
+# make sure that correct MCMC settings are used for defining the model 
+cat("Defining N-moixture model with:\n")
+cat("  n.iter =", n.iter, "\n")
+cat("  n.burnin =", n.burnin, "\n")
+cat("  n.chains =", n.chains, "\n")
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 8. Preliminary test of NIMBLE model to identify problems --------
