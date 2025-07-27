@@ -10,18 +10,18 @@ on:
       
   workflow_dispatch:  # This allows manual triggering of the workflow
     inputs: # to manually set values for the workflow run as n.samples, burn-in or n.chains
-      n.iter: 
+      iter: 
         description: "Number of samples for each N-mixture model in NIMBLE"
-        required: false
-        default: "250000" # this gives the default number of samples
-      n.burnin: 
+        required: true
+        # default: "250000" # this gives the default number of samples
+      burnin: 
         description: "Number of burn-in iterations for each N-mixture model in NIMBLE"
-        required: false
-        default: "100000"
-      n.chains: 
+        required: true
+        # default: "100000"
+      chains: 
         description: "Number of chains for each N-mixture model in NIMBLE"
-        required: false
-        default: "3"
+        required: true
+        # default: "3"
  
 jobs: # define jobs
   job_data_preparation: # set the name of a below defined job ## COMMENTED OUT BECAUSE NOT POSSIBLE TO AUTOMATE
@@ -89,9 +89,9 @@ jobs: # define jobs
 
       - name: Echo input values for debugging
         run: |
-          echo "n.iter: ${{ github.event.inputs.n.iter }}"
-          echo "n.burnin: ${{ github.event.inputs.n.burnin }}"
-          echo "n.chains: ${{ github.event.inputs.n.chains }}"
+          echo "n.iter: ${{ github.event.inputs.iter }}"
+          echo "n.burnin: ${{ github.event.inputs.burnin }}"
+          echo "n.chains: ${{ github.event.inputs.chains }}"
 
       - name: Run general data preparation
         run: |
