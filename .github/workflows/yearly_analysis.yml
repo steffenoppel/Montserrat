@@ -75,11 +75,6 @@ jobs: # define jobs
     runs-on: macos-latest
     needs: job_data_preparation # set dependency to first job because the output of this job is needed for the current one
 
-    env: # create environmental variables 
-      N_ITER: ${{ inputs.n.iter }}
-      N_BURNIN: ${{ inputs.n.burnin }}
-      N_CHAINS: ${{ inputs.n.chains }}
-
     steps:
       - name: Checkout repository # provide a name for this step within the job
         uses: actions/checkout@v3
@@ -94,9 +89,9 @@ jobs: # define jobs
 
       - name: Echo input values for debugging
         run: |
-          echo "n.iter: $N_ITER"
-          echo "n.burnin: $N_BURNIN"
-          echo "n.chains: $N_CHAINS"
+          echo "n.iter: ${{ github.event.inputs.n.iter }}"
+          echo "n.burnin: ${{ github.event.inputs.n.burnin }}"
+          echo "n.chains: ${{ github.event.inputs.n.chains }}"
 
       - name: Run general data preparation
         run: |
