@@ -9,6 +9,19 @@ on:
       - 'Montserrat/data/**' # triggers a workflow every time a new file is added to the data folder in the repository
       
   workflow_dispatch:  # This allows manual triggering of the workflow
+    inputs: # to manually set values for the workflow run as n.samples, burn-in or n.chains
+      iter: 
+        description: "Number of samples for each N-mixture model in NIMBLE"
+        required: true
+        default: "250000" # this gives the default number of samples
+      burnin: 
+        description: "Number of burn-in iterations for each N-mixture model in NIMBLE"
+        required: true
+        default: "100000"
+      chains: 
+        description: "Number of chains for each N-mixture model in NIMBLE"
+        required: true
+        default: "3"
  
 jobs: # define jobs
   job_data_preparation: # set the name of a below defined job ## COMMENTED OUT BECAUSE NOT POSSIBLE TO AUTOMATE
@@ -23,18 +36,12 @@ jobs: # define jobs
 
       - name: Install R dependencies
         run: |
-          Rscript -e 'install.packages(c("tidyverse", "data.table"))'
-
+          Rscript -e 'install.packages(c("tidyverse", "data.table", "nimble"))'
           Rscript -e 'filter <- dplyr::filter; select <- dplyr::select; rename <- dplyr::rename'
 
-      - name: Install pkg-config and pkgconf silently # this is solely a step to overcome issues with lots of annoying but non fatal and distractive error messages
-        run: |
-          brew install pkg-config || true
-          export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1
-          brew install pkgconf || true
-
       - name: Run data preparation for Nmix models in NIMBLE
-        run: Rscript 'Montserrat_forest_bird_monitoring_data_prep.R'
+        run: |
+          Rscript 'Montserrat_forest_bird_monitoring_data_prep.R'
 
       - name: Configure git # this code is needed to make the created RData with all prepared data in the workflow available in the repo outside any git actions
         run: |
@@ -73,8 +80,16 @@ jobs: # define jobs
           Rscript -e 'install.packages(c("tidyverse", "data.table", "nimble"))'
           Rscript -e 'filter <- dplyr::filter; select <- dplyr::select; rename <- dplyr::rename'
 
+      - name: Echo input values for debugging
+        run: |
+          echo "n.iter: ${{ github.event.inputs.iter }}"
+          echo "n.burnin: ${{ github.event.inputs.burnin }}"
+          echo "n.chains: ${{ github.event.inputs.chains }}"
+
       - name: Run general data preparation
-        run: Rscript 'Montserrat_forest_bird_monitoring_data_prep_Nmix_model_def_nimble.R' # run RScript to prepare data for Nmix models in NIMBLE
+        run: |
+          echo 'MCMC settings are going to be defined with ${{ github.event.inputs.iter }} iterations, \ ${{ github.event.inputs.burnin }} samples for the burn-in and \ ${{ github.event.inputs.chains }} chains. \ The thinning is pre-set to 10.' # just a message to remind on the MCMC settings
+          Rscript Montserrat_forest_bird_monitoring_data_prep_Nmix_model_def_nimble.R ${{ github.event.inputs.iter }} ${{ github.event.inputs.burnin }} ${{ github.event.inputs.chains }} # run RScript to prepare data for Nmix models in NIMBLE and makes the ariables github.event.inputs.(name of the input) available
         
       - name: Configure git # this code is needed to make the created RData with all prepared data in the workflow available in the repo outside any git actions
         run: |

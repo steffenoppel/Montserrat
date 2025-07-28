@@ -15,6 +15,9 @@ library(nimble)
 # load data from general data preparation script 'Montserrat_forest_bird_monitoring_data_prep.R'
 load(file = 'data/montserrat_annual_data_input.RData')
 
+# load input from workflow dispatch - for costomized workflow runs with adjustable n.sim, n.burnin and n.chains
+mcmc.input <- commandArgs(trailingOnly = TRUE)
+
 # save SPECIES as full names  
 SPECIES # print species codes 
 fullnames <- c("Montserrat Oriole", "Forest Thrush", "Bridled Quail-Dove", "Brown Trembler", # save full species names in the same order as SPECIES 
@@ -270,10 +273,25 @@ parameters.trend <- c("fit", "fit.new","trend","trend2","totalN","anndet","N")  
 
 
 # MCMC settings
-# number of posterior samples per chain is n.iter - n.burnin
-n.iter <- 250000 #150000
-n.burnin <- 100000  #100000
-n.chains <- 3 #3
+# set default number of posterior samples per chain is n.iter - n.burnin
+default.n.iter <- 250000 #250000
+default.n.burnin <- 100000 #100000
+default.n.chains <-  3 #3
+
+# set workflow dispatch values or default MCMC settings
+n.iter <- if(length(mcmc.input) >= 1) as.numeric(mcmc.input[1]) else default.n.iter
+n.burnin <- if(length(mcmc.input) >= 2) as.numeric(mcmc.input[2]) else default.n.burnin
+n.chains <- if(length(mcmc.input) >= 3) as.numeric(mcmc.input[3]) else default.n.chains
+
+# make sure that correct MCMC settings are used for defining the model 
+cat("Defining N-mixture model with:\n")
+cat("  n.iter =", n.iter, "\n")
+cat("  n.burnin =", n.burnin, "\n")
+cat("  n.chains =", n.chains, "\n")
+
+# just as debugging step
+print('length of mcmc.input:')
+length(mcmc.input)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 8. Preliminary test of NIMBLE model to identify problems --------
