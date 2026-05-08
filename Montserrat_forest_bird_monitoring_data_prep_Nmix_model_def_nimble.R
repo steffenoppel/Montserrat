@@ -59,21 +59,55 @@ ACT<-array(NA, dim=c(nsites,3,nyears))				## REPLACED ON 2 MAY WITH RAINFALL AMO
 for (y in 2011:YEAR){
   obsC<-subset(SURVEYDATA, year==y)
   y<-match(y,c(2011:YEAR))						## translates the year (2011, 2012, etc.) into consecutive number (1,2,...) for array dimensions
-  x<-obsC %>% dplyr::select(Point, Count, time) %>% tidyr::spread(key=Count, value=time) %>% dplyr::arrange(Point)
+  x<-obsC %>% dplyr::select(Point, Count, time) %>%
+    tidyr::pivot_wider(
+      names_from = Count,
+      values_from = time,
+      values_fn = list(time = mean),  # or first(), sum(), max()
+      values_fill = NA
+    ) %>%
+    dplyr::arrange(Point)
   time[,,y]<-as.matrix(x[,2:4])
   
-  x<-obsC %>% dplyr::select(Point, Count, day) %>% tidyr::spread(key=Count, value=day) %>% dplyr::arrange(Point)
+  x<-obsC %>% dplyr::select(Point, Count, day) %>%
+    tidyr::pivot_wider(
+      names_from = Count,
+      values_from = day,
+      values_fn = list(day = mean),  # or first(), sum(), max()
+      values_fill = NA
+    ) %>%
+    dplyr::arrange(Point)
   day[,,y]<-as.matrix(x[,2:4])
   
   x<-obsC %>% dplyr::select(Point, Count, Wind) %>%
     mutate(Wind=ifelse(Wind<3,0,1)) %>%
-    tidyr::spread(key=Count, value=Wind) %>% dplyr::arrange(Point)
+    tidyr::pivot_wider(
+      names_from = Count,
+      values_from = Wind,
+      values_fn = list(Wind = mean),  # or first(), sum(), max()
+      values_fill = NA
+    ) %>%
+    dplyr::arrange(Point)
   wind[,,y]<-as.matrix(x[,2:4])
   
-  x<-obsC %>% dplyr::select(Point, Count, activity) %>% tidyr::spread(key=Count, value=activity) %>% dplyr::arrange(Point)
+  x<-obsC %>% dplyr::select(Point, Count, activity) %>%
+    tidyr::pivot_wider(
+      names_from = Count,
+      values_from = activity,
+      values_fn = list(activity = mean),  # or first(), sum(), max()
+      values_fill = NA
+    ) %>%
+    dplyr::arrange(Point)
   ACT[,,y]<-as.matrix(x[,2:4])
   
-  x<-obsC %>% dplyr::select(Point, Count, Rain) %>% tidyr::spread(key=Count, value=Rain) %>% dplyr::arrange(Point)
+  x<-obsC %>% dplyr::select(Point, Count, Rain) %>%
+    tidyr::pivot_wider(
+      names_from = Count,
+      values_from = Rain,
+      values_fn = list(Rain = mean),  # or first(), sum(), max()
+      values_fill = NA
+    ) %>%
+    dplyr::arrange(Point)
   rain[,,y]<-as.matrix(x[,2:4])
   
 }
@@ -308,7 +342,10 @@ for (y in 2011:YEAR){
   x<-bird_s %>%
     dplyr::filter(year==y) %>%
     dplyr::select(Point, Count, N) %>%
-    tidyr::spread(key=Count, value=N) %>%
+    tidyr::pivot_wider(
+      names_from = Count,
+      values_from = N
+    ) %>%
     dplyr::arrange(Point)
   yc<-match(y,c(2011:YEAR))						## translates the year (2011, 2012, etc.) into consecutive number (1,2,...) for array dimensions
   BIRD.y[,,yc]<-as.matrix(x[,2:4])

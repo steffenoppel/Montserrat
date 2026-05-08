@@ -107,7 +107,8 @@ for(l in 1:dim(CheckErrors[CheckErrors$Problem=="TooMany",])[1]){
   
   ## check whether there is a missing count on the same route and day
   pot.missing<-CheckErrors %>% filter(Problem=="TooFew") %>%
-    filter(Route==duplicates$Route)
+    filter(Route==duplicates$Route) %>%
+    filter(year==duplicates$year)
   
   ## check whether the missing count is usually before or after the duplicate count
   check_sequence<-impVisit %>% filter(year==CheckErrors$year[l],Point %in% c(duplicates$Point,pot.missing$Point)) %>%
@@ -309,7 +310,12 @@ birdmat <- birds %>%
   group_by(VisitID, Species) %>%
   summarise(Number = sum(Number)) %>% filter(!is.na(VisitID)) %>% 
   ungroup() %>%
-  spread(key=Species, value=Number, fill=0)
+  #spread(key=Species, value=Number, fill=0) %>%
+  tidyr::pivot_wider(
+    names_from = Species,
+    values_from = Number,
+    values_fill = 0
+  )
 
 # create df where for each species obsCov are prepared to fill in birddata using a join
 # obsCov_spec <- bind_rows(replicate(length(SPECIES), obsCov, simplify = FALSE)) %>%
