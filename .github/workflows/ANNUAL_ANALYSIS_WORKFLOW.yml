@@ -115,27 +115,36 @@ jobs:
     runs-on: ubuntu-latest
     needs: job_run_Nmix_model
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+      uses: actions/checkout@v3
+
+      - name: Clean old outputs
+      run: |
+          rm -rf output
+          mkdir -p output
 
       - name: Download all outputs
         uses: actions/download-artifact@v4
         with:
           path: output_tmp/
 
-      - name: Collect outputs
-        run: |
-          mkdir -p output
-          find output_tmp -type f -exec mv {} output/ \;
+      - name: Collect model outputs
+       run: |
+          find output_tmp -type f \( -name "*.rds" -o -name "*.csv" \) -exec mv {} output/ \;
 
       - name: Configure git
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Commit and push (single writer)
+      - name: Commit and push
         env:
           GITHUB_TOKEN: ${{ secrets.PAT_Montserrat }}
         run: |
           git fetch origin main
           git checkout main
           git reset --hard origin/main
+
+          git add output/
+          git commit -m "Add 2026 Nmix model outputs" || echo "No changes to commit"
+          git push origin main
