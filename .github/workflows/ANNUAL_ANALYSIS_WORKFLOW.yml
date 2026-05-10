@@ -111,7 +111,7 @@ jobs:
           path: output/
 
 
-job_merge_outputs_and_commit:
+  job_merge_outputs_and_commit:
     runs-on: ubuntu-latest
     needs: job_run_Nmix_model
     steps:
