@@ -114,7 +114,7 @@ TRENDMOD <- nimbleMCMC(code = trend.model,
                        summary=T)
   
 # save Trendmodel to output
-saveRDS(TRENDMOD,sprintf("output/%s_trend_model_nimble.rds",s))
+saveRDS(TRENDMOD,sprintf("output/models/%i/%s_trend_model_nimble.rds",YEAR,s))
   
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 6. Evaluate model fit with bayesian p-value  --------
@@ -149,8 +149,8 @@ names(out)[c(3,4,5)]<-c('lcl','median', 'ucl')
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
 
 # save model to output
-saveRDS(TRENDMOD,sprintf("output/%s_trend_model_nimble.rds",s))
+# saveRDS(TRENDMOD,sprintf("output/%s_trend_model_nimble.rds",s))
 
 # save trendestimates to output
-fwrite(out,sprintf("output/%s_trend_estimates.csv",s))
+fwrite(out,sprintf("output/models/%i/%s_trend_estimates.csv",YEAR,s))
 

@@ -39,12 +39,12 @@ fullnames<-c("Montserrat Oriole", "Forest Thrush", "Bridled Quail-Dove", "Brown 
              "Caribbean Elaenia","Bananaquit")
 
 # collect all files that have been created with output from Nmix models and save data in annestimates and trendout
-allout<-list.files(path = 'output/', pattern="trend_estimates.csv")
+allout<-list.files(path = sprintf('output/models/%i',YEAR), pattern="trend_estimates.csv")
 annestimates<-tibble()
 annpointestimates<-tibble()
 trendout<-tibble()
 for (f in allout){
-  x<-fread(paste0('output/', f))
+  x<-fread(paste0('output/models/',YEAR,'/', f))
   trendout<-trendout %>% bind_rows(x %>% dplyr::filter(parameter %in% c("trend","trend2")))
   annestimates<-annestimates %>% bind_rows(x %>% dplyr::filter(substr(parameter,1,6)=="totalN"))
   annpointestimates<-annpointestimates %>% bind_rows(x %>% dplyr::filter(substr(parameter,1,1)=="N"))
@@ -125,7 +125,7 @@ annestimates %>%
         axis.title.y=element_text(margin=margin(0,20,0,0)),
         strip.background=element_rect(fill="white", colour="black"))
 
-ggsave(sprintf("output/Montserrat_ForestBird_Trends%s.pdf",YEAR), width=13, height=16)   ## need to futureproof this by making max year dynamic
+ggsave(sprintf("output/reports/Montserrat_ForestBird_Trends%s.pdf",YEAR), width=13, height=16)   ## need to futureproof this by making max year dynamic
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -174,6 +174,6 @@ table2<-trendout %>%
 #                  output_file = "Montserrat_ForestBird_AnnualSummary_rawdat.html")
 
 rmarkdown::render('Annual_abundance_report_modelled.Rmd',
-                  output_file = sprintf("output/Montserrat_ForestBird_AnnualReport_%s.html",YEAR)) ## need to futureproof this by making max year dynamic so we save annual reports
+                  output_file = sprintf("output/reports/Montserrat_ForestBird_AnnualReport_%s.html",YEAR)) ## need to futureproof this by making max year dynamic so we save annual reports
 
 
