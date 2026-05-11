@@ -223,6 +223,12 @@ jobs:
           git checkout main
           git pull origin main
   
+          # Year-specific reports (accumulating)
           git add output/reports/
+          
+          # Annual summary tables (overwritten each year)
+          git add output/Annual_estimates.csv
+          git add output/Annual_estimates_mapdata.csv
+          git add output/Trend_estimates.csv
           git commit -m "Add annual reports for ${{ env.YEAR }}" || echo "No changes"
           git push origin main
