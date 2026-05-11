@@ -2,142 +2,147 @@ name: ANNUAL BIRD TREND ANALYSIS
 
 concurrency:
   group: montserrat-main-writer
-  cancel-in-progress: false
+cancel-in-progress: false
 
 on:
   push:
-    paths:
-      - 'Montserrat/data/**'
-  workflow_dispatch:
-    inputs:
-      iter:
-        description: "Number of samples for each N-mixture model in NIMBLE"
-        required: true
-        default: "250000"
-      burnin:
-        description: "Number of burn-in iterations for each N-mixture model in NIMBLE"
-        required: true
-        default: "100000"
-      chains:
-        description: "Number of chains for each N-mixture model in NIMBLE"
-        required: true
-        default: "3"
+  paths:
+  - 'Montserrat/data/**'
+workflow_dispatch:
+  inputs:
+  iter:
+  description: "Number of samples for each N-mixture model in NIMBLE"
+required: true
+default: "250000"
+burnin:
+  description: "Number of burn-in iterations for each N-mixture model in NIMBLE"
+required: true
+default: "100000"
+chains:
+  description: "Number of chains for each N-mixture model in NIMBLE"
+required: true
+default: "3"
 
 jobs:
-
+  
   job_data_preparation:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v3
+  runs-on: macos-latest
+steps:
+  - uses: actions/checkout@v3
+- uses: r-lib/actions/setup-r@v2
 
-      - uses: r-lib/actions/setup-r@v2
+- name: Install R dependencies
+run: |
+  Rscript -e 'install.packages(c("tidyverse","data.table","nimble"))'
 
-      - name: Install R dependencies
-        run: |
-          Rscript -e 'install.packages(c("tidyverse","data.table","nimble"))'
+- name: Run data preparation
+run: |
+  Rscript Montserrat_forest_bird_monitoring_data_prep.R
 
-      - name: Run data preparation
-        run: |
-          Rscript Montserrat_forest_bird_monitoring_data_prep.R
-
-      - name: Upload prepared data
-        uses: actions/upload-artifact@v4
-        with:
-          name: prepared-annual-data
-          path: data/MONTSERRAT_ANNUAL_DATA_INPUT.RData
-
-
-  job_data_preparation_nimble:
-    runs-on: macos-latest
-    needs: job_data_preparation
-    steps:
-      - uses: actions/checkout@v3
-
-      - uses: r-lib/actions/setup-r@v2
-
-      - name: Install R dependencies
-        run: |
-          Rscript -e 'install.packages(c("tidyverse","data.table","nimble"))'
-
-      - name: Download prepared data
-        uses: actions/download-artifact@v4
-        with:
-          name: prepared-annual-data
-          path: data/
-
-      - name: Run NIMBLE prep
-        run: |
-          Rscript Montserrat_forest_bird_monitoring_data_prep_Nmix_model_def_nimble.R \
-            ${{ github.event.inputs.iter }} \
-            ${{ github.event.inputs.burnin }} \
-            ${{ github.event.inputs.chains }}
-
-      - name: Upload NIMBLE input
-        uses: actions/upload-artifact@v4
-        with:
-          name: nimble-input
-          path: data/Montserrat_forest_bird_monitoring_yearly_NIMBLE_model_data.RData
+- name: Upload prepared data
+uses: actions/upload-artifact@v4
+with:
+  name: prepared-annual-data
+path: data/MONTSERRAT_ANNUAL_DATA_INPUT.RData
 
 
-  job_run_Nmix_model:
-    runs-on: macos-latest
-    needs: job_data_preparation_nimble
-    strategy:
-      matrix:
-        SPECIES: ["MTOR","FOTH","BRQD","TREM","ACHU","PTCA","PETH","GTCA","SBTH","SNPI","CAEL","BANA"]
+job_data_preparation_nimble:
+  runs-on: macos-latest
+needs: job_data_preparation
+steps:
+  - uses: actions/checkout@v3
+- uses: r-lib/actions/setup-r@v2
 
-    steps:
-      - uses: actions/checkout@v3
+- name: Install R dependencies
+run: |
+  Rscript -e 'install.packages(c("tidyverse","data.table","nimble"))'
 
-      - uses: actions/download-artifact@v4
-        with:
-          name: nimble-input
-          path: data/
+- uses: actions/download-artifact@v4
+with:
+  name: prepared-annual-data
+path: data/
+  
+  - name: Run NIMBLE prep
+run: |
+  Rscript Montserrat_forest_bird_monitoring_data_prep_Nmix_model_def_nimble.R \
+${{ github.event.inputs.iter }} \
+${{ github.event.inputs.burnin }} \
+${{ github.event.inputs.chains }}
 
-      - uses: r-lib/actions/setup-r@v2
-
-      - name: Install R dependencies
-        run: |
-          Rscript -e 'install.packages(c("tidyverse","data.table","nimble","lubridate","MCMCvis"))'
-
-      - name: Run NIMBLE model
-        run: |
-          Rscript Montserrat_forest_bird_monitoring_run_Nmix_nimble.R ${{ matrix.SPECIES }}
-
-      - name: Upload model output
-        uses: actions/upload-artifact@v4
-        with:
-          name: output-${{ matrix.SPECIES }}
-          path: output/
+- name: Upload NIMBLE input
+uses: actions/upload-artifact@v4
+with:
+  name: nimble-input
+path: data/Montserrat_forest_bird_monitoring_yearly_NIMBLE_model_data.RData
 
 
-  job_merge_outputs_and_commit:
-    runs-on: ubuntu-latest
-    needs: job_run_Nmix_model
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+job_run_Nmix_model:
+  runs-on: macos-latest
+needs: job_data_preparation_nimble
+strategy:
+  matrix:
+  SPECIES:
+  - MTOR - FOTH - BRQD - TREM - ACHU - PTCA
+- PETH - GTCA - SBTH - SNPI - CAEL - BANA
 
-      - name: Clean old outputs
+steps:
+  - uses: actions/checkout@v3
+- uses: actions/download-artifact@v4
+with:
+  name: nimble-input
+path: data/
+  
+  - uses: r-lib/actions/setup-r@v2
+
+- name: Install R dependencies
+run: |
+  Rscript -e 'install.packages(c("tidyverse","data.table","nimble","lubridate","MCMCvis"))'
+
+- name: Run NIMBLE model
+run: |
+  Rscript Montserrat_forest_bird_monitoring_run_Nmix_nimble.R ${{ matrix.SPECIES }}
+
+- name: Upload model output
+uses: actions/upload-artifact@v4
+with:
+  name: output-${{ matrix.SPECIES }}
+path: |
+  output/*.rds
+output/*.csv
+
+
+job_merge_outputs_and_commit:
+  runs-on: ubuntu-latest
+needs: job_run_Nmix_model
+
+steps:
+  - uses: actions/checkout@v3
+
+- name: Remove last year's outputs
         run: |
           rm -rf output
           mkdir -p output
 
-      - name: Download all outputs
+      - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          path: output_tmp/
+          path: artifacts/
 
-      - name: Collect model outputs
+      - name: Move outputs into repository
         run: |
-          find output_tmp -type f \( -name "*.rds" -o -name "*.csv" \) -exec mv {} output/ \;
+          find artifacts -type f \( -name "*.rds" -o -name "*.csv" \) -exec mv {} output/ \;
+
+      - name: Verify new outputs exist
+        run: |
+          ls -lh output
+          test "$(ls -A output | wc -l)" -gt 0
 
       - name: Configure git
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Commit and push
+      - name: Commit and push new 2026 outputs
         env:
           GITHUB_TOKEN: ${{ secrets.PAT_Montserrat }}
         run: |
@@ -146,5 +151,5 @@ jobs:
           git reset --hard origin/main
 
           git add output/
-          git commit -m "Add 2026 Nmix model outputs" || echo "No changes to commit"
+          git commit -m "Add 2026 Nmix model outputs" || exit 1
           git push origin main
