@@ -13,6 +13,7 @@ library(tidyverse)
 library(data.table) 
 library(rmarkdown)
 library(nimble)
+library(sf)
 filter<-dplyr::filter
 select<-dplyr::select
 rename<-dplyr::rename
@@ -74,6 +75,13 @@ mapdata<-out %>%
   mutate(order=as.numeric(order)) %>%
   dplyr::select(-Point) %>%
   left_join(points, by="order") %>%
+  
+  ## convert coordinates into WGS84 so that ShinyApp can be deployed without sf
+  st_as_sf(coords = c("Eastings", "Northings"), crs = 2004) %>%
+  st_transform(4326) %>% # Transform to EPSG 4326
+  mutate(Eastings=st_coordinates(.)[,1],Northings=st_coordinates(.)[,2]) %>%
+  st_drop_geometry() %>%
+  
   dplyr::select(species,Year,Point, Eastings,Northings,Altitude,Habitat_Code,mean, median, lcl,ucl)
 
 write.table(mapdata,"output/Annual_estimates_mapdata.csv", row.names=F, sep=",")
