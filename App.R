@@ -14,11 +14,10 @@ library('rsconnect')
 library(shiny)
 library(tidyverse)
 library(data.table)
-library(dtplyr)
+
 library(lubridate)
 library(ggplot2)
 library(leaflet)
-library(sf)
 library(gridExtra)
 library(readr)
 
@@ -148,16 +147,7 @@ ui <- fluidPage(
 
 
 server <- function(input, output, session) {
-  # Create mapdata_sf as a reactive object
-  mapdata_sf <- reactive({
-    req(mapdata)  # Ensure mapdata is available
-    mapdata %>%
-      st_as_sf(coords = c("Eastings", "Northings"), crs = 2004) %>%
-      st_transform(4326) %>% # Transform to EPSG 4326
-      mutate(Eastings=st_coordinates(.)[,1],Northings=st_coordinates(.)[,2]) %>%
-      st_drop_geometry()
-  })
-  
+
   output$Index <-
     renderPlot({
       
@@ -193,7 +183,7 @@ server <- function(input, output, session) {
     # ----- recreate your summaries EXACTLY -----
     
     
-    pointlabels <- mapdata_sf() %>%
+    pointlabels <- mapdata %>%
       filter(fullspec == input$species) %>%
       group_by(Point) %>%
       summarise(
@@ -209,7 +199,7 @@ server <- function(input, output, session) {
       ) %>%
       select(Point, Lowest, Highest)
     
-    abundance_sf <- mapdata_sf() %>%
+    abundance_sf <- mapdata %>%
       filter(fullspec == input$species,
              Year == input$year) %>%
       mutate(
@@ -272,3 +262,14 @@ server <- function(input, output, session) {
 }
 
 shinyApp(ui, server)
+
+
+#.....................................................................................
+# 5.  DEPLOY APP TO SERVER       ---------------------
+#.....................................................................................
+
+
+# rsconnect::deployApp(appDir="C:/STEFFEN/Vogelwarte/Shinyapps/Montserrat",
+# 				appFiles="App.R",
+# 				appName="Montserrat",
+# 				appTitle="Montserrat")
